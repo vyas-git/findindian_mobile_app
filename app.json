@@ -1,13 +1,19 @@
 {
   "expo": {
-    "name": "findindian-mobile",
-    "slug": "findindian-mobile",
-    "version": "1.0.0",
+    "name": "findIndian.de",
+    "slug": "findIndian-de",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.findindian.de",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -15,10 +21,50 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.findindian.de",
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "scheme": "findindianmobile",
+    "extra": {
+      "SUPABASE_URL": "https://nvksbmrjhwqgfcysqbcj.supabase.co",
+      "SUPABASE_ANON_KEY": "your-anon-key",
+      "SUPABASE_PUBLISH_KEY": "your-publish-key",
+      "eas": {
+        "projectId": "bde927a2-baf3-4ddb-a1e6-8c8b9ee00df9"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bde927a2-baf3-4ddb-a1e6-8c8b9ee00df9"
+    },
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-web-browser",
+        {
+          "experimentalLauncherActivity": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2563eb",
+          "sounds": [],
+          "defaultChannel": "messages"
+        }
+      ]
+    ],
+    "owner": "saivyas-2"
   }
 }

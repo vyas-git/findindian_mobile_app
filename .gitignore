@@ -31,7 +31,27 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
+
+# credentials / backups
+credentials.json
+google-services.json
+*keystore*
+*keystore-backup*
+@saivyas-2__findIndian-de-keystore-backup/
+@saivyas-2__findIndian-de-keystore-backup/**
+
+# archives
+*.zip
+*.tar
+*.tar.gz
+*.aab
+*.apk
+
+# misc generated
+expo-qr.png
 
 # typescript
 *.tsbuildinfo

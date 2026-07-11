@@ -1,0 +1,181 @@
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { WebView } from 'react-native-webview';
+import colors from '../theme/colors';
+import { getCityCoordinates, groupMembersByCity } from '../data/germanyCityCoordinates';
+
+const MAP_HTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    .leaflet-custom-marker { background: transparent !important; border: none !important; }
+    .leaflet-city-marker {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 6px;
+      white-space: nowrap;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+    }
+    .leaflet-city-marker.selected {
+      background: rgba(102, 126, 234, 0.2);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+    .leaflet-city-name { font-size: 15px; font-weight: 600; color: #111b21; font-family: sans-serif; }
+    .leaflet-city-badge {
+      font-size: 10px; font-weight: 700; color: #fff; background: #667eea;
+      padding: 2px 6px; border-radius: 10px;
+    }
+    .leaflet-city-marker.selected .leaflet-city-badge { background: #DD0000; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    let map;
+    let markerLayer = [];
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function createMarkerIcon(city, count, isSelected) {
+      return L.divIcon({
+        html:
+          '<div class="leaflet-city-marker ' + (isSelected ? 'selected' : '') + '">' +
+          '<span class="leaflet-city-name">' + escapeHtml(city) + '</span>' +
+          '<span class="leaflet-city-badge">+' + count + '</span></div>',
+        className: 'leaflet-custom-marker',
+        iconSize: [null, null],
+        iconAnchor: [0, 0],
+      });
+    }
+
+    function initMap() {
+      map = L.map('map', { zoomControl: true, attributionControl: true }).setView([51.0, 10.5], 6);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+    }
+
+    window.updateMarkers = function(markers, selectedCity) {
+      if (!map) initMap();
+      markerLayer.forEach(function(m) { map.removeLayer(m); });
+      markerLayer = [];
+      (markers || []).forEach(function(item) {
+        const marker = L.marker([item.latitude, item.longitude], {
+          icon: createMarkerIcon(item.city, item.count, selectedCity === item.city),
+        });
+        marker.on('click', function() {
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'cityPress', city: item.city }));
+          }
+        });
+        marker.addTo(map);
+        markerLayer.push(marker);
+      });
+    };
+
+    initMap();
+    window.updateMarkers([], null);
+  </script>
+</body>
+</html>`;
+
+export default function MembersMap({ members, selectedCity, onCityPress }) {
+  const webViewRef = useRef(null);
+  const cityGroups = useMemo(() => groupMembersByCity(members), [members]);
+
+  const markers = useMemo(() => {
+    return Object.entries(cityGroups)
+      .map(([city, cityMembers]) => {
+        const coords = getCityCoordinates(city);
+        if (!coords) return null;
+        return {
+          city,
+          count: cityMembers.length,
+          latitude: coords[0],
+          longitude: coords[1],
+        };
+      })
+      .filter(Boolean);
+  }, [cityGroups]);
+
+  const syncMarkers = useCallback(() => {
+    const payload = JSON.stringify(markers);
+    const city = JSON.stringify(selectedCity);
+    webViewRef.current?.injectJavaScript(
+      `window.updateMarkers(${payload}, ${city}); true;`
+    );
+  }, [markers, selectedCity]);
+
+  useEffect(() => {
+    syncMarkers();
+  }, [syncMarkers]);
+
+  const handleMessage = useCallback(
+    (event) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data);
+        if (data.type === 'cityPress' && data.city) {
+          onCityPress?.(data.city);
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    },
+    [onCityPress]
+  );
+
+  return (
+    <View style={styles.container}>
+      <WebView
+        ref={webViewRef}
+        source={{ html: MAP_HTML }}
+        style={styles.map}
+        originWhitelist={['*']}
+        javaScriptEnabled
+        domStorageEnabled
+        scrollEnabled={false}
+        onLoadEnd={syncMarkers}
+        onMessage={handleMessage}
+      />
+      {selectedCity ? (
+        <View style={styles.filterHint}>
+          <Text style={styles.filterHintText}>Showing members in {selectedCity}</Text>
+          <TouchableOpacity onPress={() => onCityPress?.(null)}>
+            <Text style={styles.clearFilter}>Clear</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1, backgroundColor: '#f5f6f6' },
+  filterHint: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 10,
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  filterHintText: { fontWeight: '600', color: colors.textPrimary },
+  clearFilter: { color: colors.primary, fontWeight: '600' },
+});
