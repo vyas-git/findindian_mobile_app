@@ -137,7 +137,15 @@ export function usePushNotifications(onNotificationTap) {
         console.info('[push] token registered with', API_URL);
         if (__DEV__) console.info('[push] Expo push token:', token);
       } catch (e) {
-        console.error('[push] setup failed:', e?.message || e);
+        const message = e?.message || String(e);
+        if (message.includes('Firebase') || message.includes('googleServicesFile')) {
+          console.error(
+            '[push] Firebase not configured. Add google-services.json from Firebase Console ' +
+              '(package com.findindian.de), upload FCM key to EAS, then rebuild the dev client. ' +
+              'Guide: https://docs.expo.dev/push-notifications/fcm-credentials/'
+          );
+        }
+        console.error('[push] setup failed:', message);
         if (__DEV__ && e?.stack) console.error(e.stack);
       }
     };

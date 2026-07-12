@@ -23,6 +23,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.findindian.de",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
