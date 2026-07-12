@@ -37,7 +37,7 @@ yarn-error.*
 
 # credentials / backups
 credentials.json
-google-services.json
+*firebase-adminsdk*.json
 *keystore*
 *keystore-backup*
 @saivyas-2__findIndian-de-keystore-backup/

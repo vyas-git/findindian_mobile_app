@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "225606739425",
+    "project_id": "findindian-de",
+    "storage_bucket": "findindian-de.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225606739425:android:b5c14ac93018e1bd5d9ea0",
+        "android_client_info": {
+          "package_name": "com.findindian.de"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOlP0CY2RRYwMStMudyiaHxNgqO8vfTNk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
