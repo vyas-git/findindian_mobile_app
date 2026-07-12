@@ -9,9 +9,22 @@ export function isRemotePushSupported() {
   return !(Constants.appOwnership === 'expo' && Platform.OS === 'android');
 }
 
-async function loadNotificationsModule() {
-  if (!isRemotePushSupported()) return null;
-  return import('expo-notifications');
+let notificationsModulePromise = null;
+let deviceModulePromise = null;
+
+function loadNotificationsModule() {
+  if (!isRemotePushSupported()) return Promise.resolve(null);
+  if (!notificationsModulePromise) {
+    notificationsModulePromise = import('expo-notifications');
+  }
+  return notificationsModulePromise;
+}
+
+function loadDeviceModule() {
+  if (!deviceModulePromise) {
+    deviceModulePromise = import('expo-device');
+  }
+  return deviceModulePromise;
 }
 
 async function ensureAndroidNotificationPermission() {
@@ -33,32 +46,39 @@ export function usePushNotifications(onNotificationTap) {
   const tokenRef = useRef(null);
   const responseListener = useRef(null);
   const appStateListener = useRef(null);
+  const registeringRef = useRef(false);
+  const apiRequestRef = useRef(apiRequest);
+  const onNotificationTapRef = useRef(onNotificationTap);
+
+  apiRequestRef.current = apiRequest;
+  onNotificationTapRef.current = onNotificationTap;
 
   useEffect(() => {
     if (!isRemotePushSupported()) {
-      if (__DEV__) {
-        console.info(
-          'Skipping remote push in Expo Go on Android. Use a development build for device notifications.'
-        );
-      }
+      console.log(
+        '[push] Skipping remote push in Expo Go on Android. Use a development build for device notifications.'
+      );
       return undefined;
     }
 
     let mounted = true;
 
+    console.log('[push] hook mounted', {
+      api: API_URL,
+      appOwnership: Constants.appOwnership,
+      executionEnvironment: Constants.executionEnvironment,
+    });
+
     const registerPushToken = async () => {
+      if (registeringRef.current) return;
+      registeringRef.current = true;
+
       try {
-        if (__DEV__) {
-          console.info('[push] setup start', {
-            api: API_URL,
-            appOwnership: Constants.appOwnership,
-            executionEnvironment: Constants.executionEnvironment,
-          });
-        }
+        console.log('[push] setup start');
 
         const [Notifications, Device] = await Promise.all([
           loadNotificationsModule(),
-          import('expo-device'),
+          loadDeviceModule(),
         ]);
         if (!mounted || !Notifications?.getPermissionsAsync) {
           console.error(
@@ -92,7 +112,7 @@ export function usePushNotifications(onNotificationTap) {
         const { status: existing } = await Notifications.getPermissionsAsync();
         let finalStatus = existing;
         if (existing !== 'granted') {
-          if (__DEV__) console.info('[push] requesting notification permission…');
+          console.log('[push] requesting notification permission…');
           const { status } = await Notifications.requestPermissionsAsync();
           finalStatus = status;
         }
@@ -124,18 +144,21 @@ export function usePushNotifications(onNotificationTap) {
         const token = tokenData.data;
         if (!mounted || !token) return;
 
-        if (tokenRef.current === token) return;
+        if (tokenRef.current === token) {
+          console.log('[push] token unchanged, skip backend sync');
+          return;
+        }
 
         tokenRef.current = token;
-        await apiRequest('/api/users/me/push-token', {
+        await apiRequestRef.current('/api/users/me/push-token', {
           method: 'POST',
           body: JSON.stringify({
             expo_push_token: token,
             platform: Platform.OS,
           }),
         });
-        console.info('[push] token registered with', API_URL);
-        if (__DEV__) console.info('[push] Expo push token:', token);
+        console.log('[push] token registered with', API_URL);
+        console.log('[push] Expo push token:', token);
       } catch (e) {
         const message = e?.message || String(e);
         if (message.includes('Firebase') || message.includes('googleServicesFile')) {
@@ -144,9 +167,14 @@ export function usePushNotifications(onNotificationTap) {
               '(package com.findindian.de), upload FCM key to EAS, then rebuild the dev client. ' +
               'Guide: https://docs.expo.dev/push-notifications/fcm-credentials/'
           );
+        } else if (message.includes('Not authenticated')) {
+          console.warn('[push] session not ready, will retry on next app focus');
+        } else {
+          console.error('[push] setup failed:', message);
+          if (__DEV__ && e?.stack) console.error(e.stack);
         }
-        console.error('[push] setup failed:', message);
-        if (__DEV__ && e?.stack) console.error(e.stack);
+      } finally {
+        registeringRef.current = false;
       }
     };
 
@@ -157,7 +185,7 @@ export function usePushNotifications(onNotificationTap) {
       responseListener.current = Notifications.addNotificationResponseReceivedListener(
         (response) => {
           const data = response.notification.request.content.data;
-          onNotificationTap?.(data);
+          onNotificationTapRef.current?.(data);
         }
       );
     });
@@ -173,12 +201,12 @@ export function usePushNotifications(onNotificationTap) {
       responseListener.current?.remove();
       appStateListener.current?.remove();
     };
-  }, [apiRequest, onNotificationTap]);
+  }, []);
 
   const unregister = async () => {
     if (!tokenRef.current || !isRemotePushSupported()) return;
     try {
-      await apiRequest('/api/users/me/push-token', {
+      await apiRequestRef.current('/api/users/me/push-token', {
         method: 'DELETE',
         body: JSON.stringify({ expo_push_token: tokenRef.current }),
       });

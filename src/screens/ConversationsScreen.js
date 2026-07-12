@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApi } from '../hooks/useApi';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
-function ConversationRow({ dm, onPress }) {
+function ConversationRow({ dm, onPress, styles, colors }) {
   const initial = (dm.other_user_name || 'U').charAt(0).toUpperCase();
   return (
     <TouchableOpacity style={styles.row} onPress={onPress}>
@@ -38,6 +38,8 @@ function ConversationRow({ dm, onPress }) {
 
 export default function ConversationsScreen({ navigation }) {
   const { apiRequest } = useApi();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +62,7 @@ export default function ConversationsScreen({ navigation }) {
   const openDM = (userId, userName) => {
     navigation.navigate('Main', {
       screen: 'Channel',
-      params: { dmUserId: userId, dmUserName: userName },
+      params: { dmUserId: userId, dmUserName: userName, returnTo: 'Messages' },
     });
   };
 
@@ -97,6 +99,8 @@ export default function ConversationsScreen({ navigation }) {
                 key={dm.id || dm.other_user_id}
                 dm={dm}
                 onPress={() => openDM(dm.other_user_id, dm.other_user_name)}
+                styles={styles}
+                colors={colors}
               />
             ))
           ) : (
@@ -108,53 +112,55 @@ export default function ConversationsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16 },
-  channelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    gap: 12,
-  },
-  channelIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#e8f5e9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  channelHash: { fontSize: 22, fontWeight: '700', color: colors.whatsappGreen },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  avatar: { width: 48, height: 48, borderRadius: 24 },
-  avatarFallback: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#e4e6eb',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontWeight: '700', color: colors.primary },
-  rowBody: { flex: 1 },
-  name: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
-  preview: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  divider: { height: 1, backgroundColor: '#e4e6eb', marginVertical: 8 },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  loader: { marginTop: 32 },
-  empty: { paddingVertical: 24, color: colors.textSecondary, textAlign: 'center', fontSize: 14 },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.shellBg, paddingHorizontal: 16 },
+    channelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 14,
+      gap: 12,
+    },
+    channelIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.channelIconBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    channelHash: { fontSize: 22, fontWeight: '700', color: colors.whatsappGreen },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    avatar: { width: 48, height: 48, borderRadius: 24 },
+    avatarFallback: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.searchBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: { fontWeight: '700', color: colors.primary },
+    rowBody: { flex: 1 },
+    name: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+    preview: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+    divider: { height: 1, backgroundColor: colors.divider, marginVertical: 8 },
+    sectionLabel: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      marginBottom: 4,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    loader: { marginTop: 32 },
+    empty: { paddingVertical: 24, color: colors.textSecondary, textAlign: 'center', fontSize: 14 },
+  });
+}

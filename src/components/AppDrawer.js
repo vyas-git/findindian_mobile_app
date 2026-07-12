@@ -8,12 +8,15 @@ import {
   Image,
   Modal,
   Pressable,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 import { AuthContext } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 import { useApi } from '../hooks/useApi';
+import { GUIDE_ARTICLES, getGuideUrl } from '../data/guideArticles';
 
 function DrawerLink({ label, onPress, active, styles }) {
   return (
@@ -57,6 +60,18 @@ export default function AppDrawer({
   const { user, userProfile } = useContext(AuthContext);
   const { apiRequest } = useApi();
   const [loadedCount, setLoadedCount] = useState(memberCount);
+
+  const openGuide = async (slug) => {
+    try {
+      await WebBrowser.openBrowserAsync(getGuideUrl(slug), {
+        toolbarColor: colors.headerBg,
+        controlsColor: colors.primary,
+        showTitle: true,
+      });
+    } catch (e) {
+      Alert.alert('Could not open guide', e.message || 'Please try again.');
+    }
+  };
 
   const avatar = userProfile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const name =
@@ -168,15 +183,20 @@ export default function AppDrawer({
             <View style={styles.divider} />
 
             <Text style={styles.sectionHeading}>QUICK LINKS</Text>
-            <SectionItem icon="people-outline" label="Browse members map" onPress={() => handleNav('Members')} iconColor={colors.textSecondary} styles={styles} />
-            <SectionItem icon="newspaper-outline" label="Community posts" onPress={() => handleNav('Posts')} iconColor={colors.textSecondary} styles={styles} />
-            <SectionItem
-              icon="chatbubbles-outline"
-              label="Group channel"
-              onPress={() => handleNav('Channel', { dmUserId: undefined, dmUserName: undefined })}
-              iconColor={colors.textSecondary}
-              styles={styles}
-            />
+            <Text style={styles.sectionSubheading}>Settling in Germany — guides & official links</Text>
+            {GUIDE_ARTICLES.map((guide) => (
+              <SectionItem
+                key={guide.id}
+                icon={guide.icon}
+                label={guide.title}
+                onPress={() => {
+                  openGuide(guide.slug);
+                  onClose?.();
+                }}
+                iconColor={colors.primary}
+                styles={styles}
+              />
+            ))}
           </ScrollView>
         </View>
         <Pressable style={styles.backdrop} onPress={onClose} />
@@ -246,6 +266,13 @@ function createStyles(colors) {
       paddingHorizontal: 16,
       paddingVertical: 8,
       letterSpacing: 0.4,
+    },
+    sectionSubheading: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      paddingHorizontal: 16,
+      paddingBottom: 4,
+      lineHeight: 16,
     },
     themeOption: {
       flexDirection: 'row',

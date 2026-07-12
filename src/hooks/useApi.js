@@ -23,8 +23,9 @@ export function useApi() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
-        const errorMessage = errorData.error || 'Request failed';
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.error || errorData.message || `Request failed (${response.status})`;
 
         if (
           errorMessage.includes('Invalid or expired token') ||

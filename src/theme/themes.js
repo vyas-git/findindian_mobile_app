@@ -28,6 +28,11 @@ export const lightColors = {
   searchBg: '#eef3f8',
   drawerActiveBg: '#f3f2ef',
   inputBg: '#ffffff',
+  chipBg: '#e8f5e9',
+  mapBg: '#f5f6f6',
+  mapFilterBg: 'rgba(255,255,255,0.95)',
+  bubbleText: '#111111',
+  channelIconBg: '#e8f5e9',
 };
 
 export const darkColors = {
@@ -60,4 +65,9 @@ export const darkColors = {
   searchBg: '#2a2a2a',
   drawerActiveBg: '#2a2a2a',
   inputBg: '#2a2a2a',
+  chipBg: '#1a3320',
+  mapBg: '#1a1a1a',
+  mapFilterBg: 'rgba(36,36,36,0.96)',
+  bubbleText: '#ececec',
+  channelIconBg: '#1a3320',
 };

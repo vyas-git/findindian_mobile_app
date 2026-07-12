@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useApi } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthProvider';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 export default function DeleteAccountScreen({ navigation }) {
   const { apiRequest } = useApi();
   const { signOut } = React.useContext(AuthContext);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [deleting, setDeleting] = useState(false);
 
   const confirmDelete = () => {
@@ -54,16 +56,18 @@ export default function DeleteAccountScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: colors.germanyRed },
-  subtitle: { color: colors.textSecondary, marginBottom: 24, lineHeight: 22 },
-  btn: {
-    backgroundColor: colors.germanyRed,
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  btnText: { color: '#fff', fontWeight: '700' },
-  cancel: { textAlign: 'center', marginTop: 16, color: colors.primary, fontWeight: '600' },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 16, backgroundColor: colors.shellBg },
+    title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: colors.germanyRed },
+    subtitle: { color: colors.textSecondary, marginBottom: 24, lineHeight: 22 },
+    btn: {
+      backgroundColor: colors.germanyRed,
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    btnText: { color: '#fff', fontWeight: '700' },
+    cancel: { textAlign: 'center', marginTop: 16, color: colors.primary, fontWeight: '600' },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -12,11 +12,13 @@ import {
 } from 'react-native';
 import { useApi } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthProvider';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ProfileModal({ visible, onClose, onUpdated, onDeleteAccount }) {
   const { refreshProfile, signOut } = React.useContext(AuthContext);
   const { apiRequest } = useApi();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [profile, setProfile] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -69,24 +71,28 @@ export default function ProfileModal({ visible, onClose, onUpdated, onDeleteAcco
           style={styles.input}
           value={profile.name || ''}
           onChangeText={(v) => setProfile({ ...profile, name: v })}
+          placeholderTextColor={colors.textSecondary}
         />
         <Text style={styles.label}>City in Germany</Text>
         <TextInput
           style={styles.input}
           value={profile.germany_city || ''}
           onChangeText={(v) => setProfile({ ...profile, germany_city: v })}
+          placeholderTextColor={colors.textSecondary}
         />
         <Text style={styles.label}>Instagram</Text>
         <TextInput
           style={styles.input}
           value={profile.instagram_handle || ''}
           onChangeText={(v) => setProfile({ ...profile, instagram_handle: v })}
+          placeholderTextColor={colors.textSecondary}
         />
         <Text style={styles.label}>LinkedIn URL</Text>
         <TextInput
           style={styles.input}
           value={profile.linkedin_url || ''}
           onChangeText={(v) => setProfile({ ...profile, linkedin_url: v })}
+          placeholderTextColor={colors.textSecondary}
         />
         <TouchableOpacity style={styles.saveBtn} onPress={save} disabled={saving}>
           <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save'}</Text>
@@ -108,28 +114,32 @@ export default function ProfileModal({ visible, onClose, onUpdated, onDeleteAcco
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: '#fff' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 20 },
-  label: { fontWeight: '600', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  saveBtn: {
-    backgroundColor: colors.primary,
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  saveBtnText: { color: '#fff', fontWeight: '700' },
-  deleteBtn: { marginTop: 16, alignItems: 'center' },
-  deleteBtnText: { color: colors.germanyRed, fontWeight: '600' },
-  signOutBtn: { marginTop: 24, alignItems: 'center' },
-  signOutText: { color: colors.textSecondary, fontWeight: '600' },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: colors.shellBg },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.shellBg },
+    title: { fontSize: 22, fontWeight: '700', marginBottom: 20, color: colors.textPrimary },
+    label: { fontWeight: '600', marginBottom: 6, marginTop: 12, color: colors.textPrimary },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      backgroundColor: colors.inputBg,
+      color: colors.textPrimary,
+    },
+    saveBtn: {
+      backgroundColor: colors.primary,
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    saveBtnText: { color: '#fff', fontWeight: '700' },
+    deleteBtn: { marginTop: 16, alignItems: 'center' },
+    deleteBtnText: { color: colors.germanyRed, fontWeight: '600' },
+    signOutBtn: { marginTop: 24, alignItems: 'center' },
+    signOutText: { color: colors.textSecondary, fontWeight: '600' },
+  });
+}

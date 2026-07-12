@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useApi } from '../hooks/useApi';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 const COMMON_CITIES = [
   'Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne', 'Stuttgart',
@@ -19,6 +19,8 @@ const COMMON_CITIES = [
 
 export default function GermanyCityModal({ visible, onSaved }) {
   const { apiRequest } = useApi();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [query, setQuery] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -49,6 +51,7 @@ export default function GermanyCityModal({ visible, onSaved }) {
         <TextInput
           style={styles.input}
           placeholder="Search city..."
+          placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={setQuery}
         />
@@ -70,18 +73,22 @@ export default function GermanyCityModal({ visible, onSaved }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
-  subtitle: { color: colors.textSecondary, marginBottom: 16 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 16,
-  },
-  cityRow: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  cityText: { fontSize: 16, fontWeight: '500' },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: colors.shellBg },
+    title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: colors.textPrimary },
+    subtitle: { color: colors.textSecondary, marginBottom: 16 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+      fontSize: 16,
+      backgroundColor: colors.inputBg,
+      color: colors.textPrimary,
+    },
+    cityRow: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider },
+    cityText: { fontSize: 16, fontWeight: '500', color: colors.textPrimary },
+  });
+}

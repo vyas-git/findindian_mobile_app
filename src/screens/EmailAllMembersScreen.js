@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useApi } from '../hooks/useApi';
-import { AuthContext } from '../context/AuthProvider';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 export default function EmailAllMembersScreen() {
   const { apiRequest } = useApi();
-  const { signOut } = React.useContext(AuthContext);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
@@ -44,10 +44,17 @@ export default function EmailAllMembersScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Email All Members</Text>
       <Text style={styles.subtitle}>Send a message to the community (paid feature on web).</Text>
-      <TextInput style={styles.input} placeholder="Subject" value={subject} onChangeText={setSubject} />
+      <TextInput
+        style={styles.input}
+        placeholder="Subject"
+        placeholderTextColor={colors.textSecondary}
+        value={subject}
+        onChangeText={setSubject}
+      />
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Message"
+        placeholderTextColor={colors.textSecondary}
         value={body}
         onChangeText={setBody}
         multiline
@@ -59,24 +66,28 @@ export default function EmailAllMembersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
-  subtitle: { color: colors.textSecondary, marginBottom: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 16,
-  },
-  textArea: { minHeight: 120, textAlignVertical: 'top' },
-  btn: {
-    backgroundColor: colors.primary,
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  btnText: { color: '#fff', fontWeight: '700' },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 16, backgroundColor: colors.shellBg },
+    title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: colors.textPrimary },
+    subtitle: { color: colors.textSecondary, marginBottom: 20 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+      fontSize: 16,
+      backgroundColor: colors.inputBg,
+      color: colors.textPrimary,
+    },
+    textArea: { minHeight: 120, textAlignVertical: 'top' },
+    btn: {
+      backgroundColor: colors.primary,
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    btnText: { color: '#fff', fontWeight: '700' },
+  });
+}

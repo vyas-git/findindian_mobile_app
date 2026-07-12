@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthProvider';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 const BG_SYMBOLS = [
   { emoji: '🇮🇳', top: '15%', left: '10%' },
@@ -28,6 +28,8 @@ const BG_SYMBOLS = [
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { signInWithGoogle, signInWithLinkedIn } = React.useContext(AuthContext);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [loadingProvider, setLoadingProvider] = useState(null);
 
   const handleSignIn = async (provider, signInFn) => {
@@ -122,35 +124,37 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.loginBg },
-  fixedBg: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
-  bgSymbol: { position: 'absolute', fontSize: 32, opacity: 0.25 },
-  flagStripe: { width: '100%' },
-  container: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  content: { maxWidth: 440, width: '100%', alignSelf: 'center' },
-  title: { fontSize: 36, fontWeight: '700', lineHeight: 42, marginBottom: 16, textAlign: 'center' },
-  titlePrefix: { color: colors.textPrimary },
-  typingText: { color: colors.germanyRed },
-  subtitle: { fontSize: 20, color: colors.textSecondary, marginBottom: 16, fontWeight: '500', textAlign: 'center' },
-  description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 32, textAlign: 'center' },
-  actions: { gap: 12 },
-  loginBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderWidth: 2,
-    borderColor: colors.borderColor,
-    borderRadius: 8,
-    backgroundColor: colors.bgWhite,
-    minHeight: 52,
-  },
-  linkedinBtn: {},
-  loginBtnText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center', paddingTop: 16 },
-  logo: { fontSize: 18, fontWeight: '700', marginBottom: 6 },
-  footerText: { color: colors.textSecondary, fontSize: 14 },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    page: { flex: 1, backgroundColor: colors.loginBg },
+    fixedBg: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+    bgSymbol: { position: 'absolute', fontSize: 32, opacity: 0.25 },
+    flagStripe: { width: '100%' },
+    container: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24 },
+    content: { maxWidth: 440, width: '100%', alignSelf: 'center' },
+    title: { fontSize: 36, fontWeight: '700', lineHeight: 42, marginBottom: 16, textAlign: 'center' },
+    titlePrefix: { color: colors.textPrimary },
+    typingText: { color: colors.germanyRed },
+    subtitle: { fontSize: 20, color: colors.textSecondary, marginBottom: 16, fontWeight: '500', textAlign: 'center' },
+    description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 32, textAlign: 'center' },
+    actions: { gap: 12 },
+    loginBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      borderWidth: 2,
+      borderColor: colors.borderColor,
+      borderRadius: 8,
+      backgroundColor: colors.cardBg,
+      minHeight: 52,
+    },
+    linkedinBtn: {},
+    loginBtnText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+    footer: { position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center', paddingTop: 16 },
+    logo: { fontSize: 18, fontWeight: '700', marginBottom: 6 },
+    footerText: { color: colors.textSecondary, fontSize: 14 },
+  });
+}

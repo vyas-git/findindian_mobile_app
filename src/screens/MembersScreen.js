@@ -111,7 +111,11 @@ export default function MembersScreen({ navigation }) {
   }, [members, searchQuery, selectedCity]);
 
   const handleMemberPress = (member) => {
-    navigation.navigate('Channel', { dmUserId: member.id, dmUserName: member.name });
+    navigation.navigate('Channel', {
+      dmUserId: member.id,
+      dmUserName: member.name,
+      returnTo: 'Members',
+    });
   };
 
   const welcomeName =
@@ -168,8 +172,8 @@ export default function MembersScreen({ navigation }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-    flex: { flex: 1 },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    flex: { flex: 1, backgroundColor: colors.shellBg },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.shellBg },
     mapSection: { flex: 1 },
     listHeader: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
     listTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
@@ -177,7 +181,7 @@ function createStyles(colors) {
     filterChip: {
       alignSelf: 'flex-start',
       marginTop: 8,
-      backgroundColor: '#e8f5e9',
+      backgroundColor: colors.chipBg,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 export default function PostCard({ post, onPress }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const initial = (post.author_name || post.user_name || 'U').charAt(0).toUpperCase();
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress?.(post)}>
@@ -31,33 +33,35 @@ export default function PostCard({ post, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    marginHorizontal: 12,
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  avatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
-  avatarFallback: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.shellBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  avatarText: { fontWeight: '700', color: colors.primary },
-  author: { fontWeight: '700', fontSize: 14 },
-  meta: { color: colors.textSecondary, fontSize: 12 },
-  title: { fontWeight: '700', fontSize: 16, marginBottom: 6 },
-  body: { color: colors.textPrimary, lineHeight: 20, fontSize: 14 },
-  image: { width: '100%', height: 180, borderRadius: 8, marginTop: 10 },
-  footer: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 8 },
-  comments: { color: colors.textSecondary, fontSize: 13 },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.cardBg,
+      marginHorizontal: 12,
+      marginBottom: 12,
+      borderRadius: 12,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.divider,
+    },
+    header: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    avatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
+    avatarFallback: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.shellBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    avatarText: { fontWeight: '700', color: colors.primary },
+    author: { fontWeight: '700', fontSize: 14, color: colors.textPrimary },
+    meta: { color: colors.textSecondary, fontSize: 12 },
+    title: { fontWeight: '700', fontSize: 16, marginBottom: 6, color: colors.textPrimary },
+    body: { color: colors.textPrimary, lineHeight: 20, fontSize: 14 },
+    image: { width: '100%', height: 180, borderRadius: 8, marginTop: 10 },
+    footer: { marginTop: 10, borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: 8 },
+    comments: { color: colors.textSecondary, fontSize: 13 },
+  });
+}

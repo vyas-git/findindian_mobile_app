@@ -18,6 +18,7 @@ import PostViewScreen from '../screens/PostViewScreen';
 import EmailAllMembersScreen from '../screens/EmailAllMembersScreen';
 import DeleteAccountScreen from '../screens/DeleteAccountScreen';
 import AppHeader from '../components/AppHeader';
+import SimpleScreenHeader from '../components/SimpleScreenHeader';
 import AppDrawer from '../components/AppDrawer';
 import ProfileModal from '../components/ProfileModal';
 import ConversationsScreen from '../screens/ConversationsScreen';
@@ -52,10 +53,16 @@ function getTabState(rootState) {
   return mainRoute?.state || null;
 }
 
+const TAB_HEADER_TITLES = {
+  Posts: 'Community Posts',
+  Channel: 'Channel',
+  Jobs: 'Jobs',
+};
+
 function MainTabsContent({ navigation }) {
   const { user, userProfile, refreshProfile } = useContext(AuthContext);
   const { unreadDm, unreadChannel } = useContext(NotificationContext);
-  const { searchQuery, setSearchQuery, searchPlaceholder } = useAppShell();
+  const { searchQuery, setSearchQuery, searchPlaceholder, header } = useAppShell();
   const { colors } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -71,7 +78,10 @@ function MainTabsContent({ navigation }) {
   }) || { activeRoute: 'Members', channelDmUserId: null };
 
   const messageBadge = unreadDm + unreadChannel;
-  const hideMainHeader = activeRoute === 'Channel' && Boolean(channelDmUserId);
+  const hideChrome =
+    header.variant === 'none' || (activeRoute === 'Channel' && Boolean(channelDmUserId));
+  const simpleHeaderTitle = header.title || TAB_HEADER_TITLES[activeRoute];
+  const showSimpleHeader = !hideChrome && activeRoute !== 'Members' && Boolean(simpleHeaderTitle);
 
   const needsCity =
     userProfile &&
@@ -91,7 +101,7 @@ function MainTabsContent({ navigation }) {
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.shellBg }]}>
-      {!hideMainHeader ? (
+      {hideChrome ? null : activeRoute === 'Members' ? (
         <AppHeader
           user={user}
           userProfile={userProfile}
@@ -100,6 +110,15 @@ function MainTabsContent({ navigation }) {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           searchPlaceholder={searchPlaceholder}
+          messageBadge={messageBadge}
+        />
+      ) : showSimpleHeader ? (
+        <SimpleScreenHeader
+          title={simpleHeaderTitle}
+          user={user}
+          userProfile={userProfile}
+          onProfilePress={() => setDrawerOpen(true)}
+          onMessagesPress={openMessages}
           messageBadge={messageBadge}
         />
       ) : null}
@@ -111,7 +130,7 @@ function MainTabsContent({ navigation }) {
           tabBarActiveTintColor: colors.textPrimary,
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-          tabBarStyle: hideMainHeader
+          tabBarStyle: hideChrome
             ? { display: 'none' }
             : {
                 borderTopColor: colors.divider,
@@ -148,7 +167,7 @@ function MainTabsContent({ navigation }) {
         <Tab.Screen
           name="Jobs"
           component={JobsScreen}
-          options={{ tabBarButton: () => null, title: 'Jobs' }}
+          options={{ title: 'Jobs' }}
         />
       </Tab.Navigator>
 
@@ -192,6 +211,7 @@ function MainTabs(props) {
 }
 
 function AuthenticatedApp({ navigationRef }) {
+  const { colors } = useTheme();
   const handleNotificationTap = useCallback(
     (data) => {
       if (!data || !navigationRef.current) return;
@@ -213,7 +233,14 @@ function AuthenticatedApp({ navigationRef }) {
 
   return (
     <NotificationProvider>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.headerBg },
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: { color: colors.textPrimary },
+          contentStyle: { backgroundColor: colors.shellBg },
+        }}
+      >
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         <Stack.Screen
           name="Messages"
@@ -233,7 +260,17 @@ export default function AppNavigator() {
   const { user, loading } = useContext(AuthContext);
   const { colors, isDark } = useTheme();
   const navigationRef = useRef(null);
-  const navTheme = isDark ? DarkTheme : DefaultTheme;
+  const navTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      primary: colors.primary,
+      background: colors.shellBg,
+      card: colors.headerBg,
+      text: colors.textPrimary,
+      border: colors.divider,
+    },
+  };
 
   if (loading) {
     return (

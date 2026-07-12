@@ -206,10 +206,10 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithLinkedIn = () => signInWithProvider('linkedin_oidc');
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     setUserProfile(null);
     return supabase.auth.signOut();
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,13 @@ import {
   Image,
 } from 'react-native';
 import { useApi } from '../hooks/useApi';
-import colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 export default function PostViewScreen({ route }) {
   const { postId } = route.params;
   const { apiRequest } = useApi();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function PostViewScreen({ route }) {
   if (!post) {
     return (
       <View style={styles.center}>
-        <Text>Post not found</Text>
+        <Text style={styles.empty}>Post not found</Text>
       </View>
     );
   }
@@ -71,15 +73,18 @@ export default function PostViewScreen({ route }) {
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container: { flex: 1, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
-  meta: { color: colors.textSecondary, marginBottom: 16 },
-  body: { fontSize: 16, lineHeight: 24 },
-  image: { width: '100%', height: 200, borderRadius: 8, marginTop: 16 },
-  commentsTitle: { fontWeight: '700', fontSize: 18, marginTop: 24, marginBottom: 12 },
-  comment: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  commentAuthor: { fontWeight: '700', fontSize: 13 },
-  commentBody: { marginTop: 4, fontSize: 14 },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.shellBg },
+    container: { flex: 1, backgroundColor: colors.shellBg },
+    title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: colors.textPrimary },
+    meta: { color: colors.textSecondary, marginBottom: 16 },
+    body: { fontSize: 16, lineHeight: 24, color: colors.textPrimary },
+    image: { width: '100%', height: 200, borderRadius: 8, marginTop: 16 },
+    commentsTitle: { fontWeight: '700', fontSize: 18, marginTop: 24, marginBottom: 12, color: colors.textPrimary },
+    comment: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
+    commentAuthor: { fontWeight: '700', fontSize: 13, color: colors.textPrimary },
+    commentBody: { marginTop: 4, fontSize: 14, color: colors.textPrimary },
+    empty: { color: colors.textSecondary },
+  });
+}
