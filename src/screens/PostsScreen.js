@@ -79,6 +79,14 @@ export default function PostsScreen({ navigation }) {
         <PostCard
           post={item}
           onPress={(p) => navigation.navigate('PostView', { postId: p.id })}
+          onPressAuthor={(p) => {
+            if (!p.user_id) return;
+            navigation.navigate('Channel', {
+              dmUserId: p.user_id,
+              dmUserName: p.author_name || p.user_name,
+              returnTo: 'Posts',
+            });
+          }}
         />
       )}
       ListEmptyComponent={<Text style={styles.empty}>No posts yet. Be the first!</Text>}

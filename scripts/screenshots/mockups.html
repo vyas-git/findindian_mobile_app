@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1" />
+  <title>findIndian.de App Screenshots</title>
+  <link rel="icon" href="../../assets/icon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; background: #111; }
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #f0f2f5;
+      overflow: hidden;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: none;
+      flex-direction: column;
+    }
+    .status { height: 44px; background: #fff; }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px 10px;
+      background: #fff;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .header.simple .title { flex: 1; text-align: center; font-weight: 700; font-size: 17px; color: #1a1a1a; }
+    .avatar { width: 36px; height: 36px; border-radius: 18px; background: linear-gradient(135deg, #667eea, #764ba2); }
+    .search {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #eef3f8;
+      border-radius: 8px;
+      padding: 0 10px;
+      height: 40px;
+      color: #666;
+      font-size: 15px;
+    }
+    .icon-btn { width: 36px; text-align: center; font-size: 22px; color: #1a1a1a; }
+    .content { flex: 1; overflow: hidden; }
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 56px;
+      background: #fff;
+      border-top: 1px solid #e4e6eb;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+    }
+    .tabs .active { color: #1a1a1a; }
+    .tab { text-align: center; }
+    .tab span { display: block; font-size: 20px; margin-bottom: 2px; }
+
+    /* Login */
+    #login { background: #f8f9fa; }
+    #login .flag { height: 8px; background: linear-gradient(90deg, #000 33%, #DD0000 33%, #DD0000 66%, #FFCE00 66%); }
+    #login .login-body { padding: 40px 24px; text-align: center; }
+    #login h1 { font-size: 28px; line-height: 1.3; margin-bottom: 8px; }
+    #login .find { color: #000; } #login .ind { color: #FF9500; } #login .ian { color: #34C759; } #login .de { color: #FF3B30; }
+    #login .sub { font-size: 18px; color: #333; margin-bottom: 12px; }
+    #login .desc { color: #666; font-size: 15px; line-height: 1.5; margin-bottom: 32px; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 10px; font-weight: 600; margin-bottom: 12px; font-size: 16px; }
+    .btn-google { background: #fff; border: 1px solid #ddd; }
+    .btn-linkedin { background: #0A66C2; color: #fff; }
+
+    /* Members */
+    .map-hero {
+      height: 280px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+    }
+    .map-dots { position: absolute; inset: 0; }
+    .dot { position: absolute; width: 12px; height: 12px; background: #25D366; border: 2px solid #fff; border-radius: 50%; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; }
+    .member { text-align: center; }
+    .member .av { width: 64px; height: 64px; border-radius: 32px; margin: 0 auto 6px; background: #eef3f8; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #2563eb; font-size: 22px; }
+    .member .name { font-size: 12px; font-weight: 600; }
+    .member .city { font-size: 10px; color: #666; }
+
+    /* Posts */
+    .start-post { display: flex; align-items: center; gap: 10px; margin: 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; color: #666; font-weight: 500; }
+    .post-card { margin: 0 12px 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #e4e6eb; }
+    .post-head { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .post-head .av { width: 36px; height: 36px; border-radius: 18px; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .post-title { font-weight: 700; margin-bottom: 6px; font-size: 15px; }
+    .post-body { color: #444; font-size: 14px; line-height: 1.4; }
+
+    /* Chat */
+    .chat-messages { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #f0f2f5; }
+    .bubble { max-width: 78%; padding: 10px 12px; border-radius: 12px; font-size: 15px; line-height: 1.35; }
+    .bubble.other { background: #fff; border: 1px solid #e4e6eb; align-self: flex-start; }
+    .bubble.own { background: #dcf8c6; align-self: flex-end; }
+    .bubble .sender { font-size: 11px; font-weight: 700; color: #2563eb; margin-bottom: 2px; }
+    .input-bar { display: flex; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #e4e6eb; align-items: flex-end; }
+    .input-bar input { flex: 1; border: 1px solid #e5e5e5; border-radius: 20px; padding: 10px 14px; font-size: 16px; }
+    .send { width: 44px; height: 44px; border-radius: 22px; background: #25D366; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+    /* DM header */
+    .dm-header { display: flex; align-items: center; gap: 10px; padding: 8px 12px 10px; background: #fff; border-bottom: 1px solid #e4e6eb; }
+    .dm-header .back { font-size: 24px; }
+    .dm-header .av { width: 40px; height: 40px; border-radius: 20px; background: #667eea; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .dm-header .name { font-weight: 700; font-size: 17px; }
+    .dm-header .loc { font-size: 12px; color: #666; }
+
+    /* Jobs */
+    .job-card { margin: 12px; padding: 16px; background: #fff; border-radius: 12px; border: 1px solid #e4e6eb; }
+    .job-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+    .job-co { color: #666; font-size: 14px; margin-bottom: 4px; }
+    .job-loc { color: #888; font-size: 13px; margin-bottom: 12px; }
+    .apply { display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+
+    /* Messages list */
+    .conv-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #e4e6eb; background: #fff; }
+    .conv-row .av { width: 48px; height: 48px; border-radius: 24px; background: #eef3f8; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #2563eb; }
+    .conv-row .hash { width: 48px; height: 48px; border-radius: 24px; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #25D366; }
+    .conv-body { flex: 1; }
+    .conv-name { font-weight: 600; font-size: 16px; }
+    .conv-preview { font-size: 13px; color: #666; margin-top: 2px; }
+
+    .capture-only { position: fixed; left: -9999px; top: 0; }
+  </style>
+</head>
+<body>
+  <!-- 1 Login -->
+  <div class="phone" id="screen-login">
+    <div id="login" style="height:100%;display:flex;flex-direction:column;">
+      <div class="flag"></div>
+      <div class="login-body" style="flex:1;">
+        <h1><span class="find">Find </span><span class="ind">Ind</span><span class="ian">ian</span><span class="de">s In Germany</span></h1>
+        <p class="sub">Connect, Meet, Grow Together</p>
+        <p class="desc">Join channels to find accommodation, jobs and grow your network with Indians in Germany.</p>
+        <div class="btn btn-google">🔵 Continue with Google</div>
+        <div class="btn btn-linkedin">in Continue with LinkedIn</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 Members -->
+  <div class="phone" id="screen-members">
+    <div class="status"></div>
+    <div class="header">
+      <div class="avatar"></div>
+      <div class="search">🔍 Search by name, city</div>
+      <div class="icon-btn">💬</div>
+    </div>
+    <div class="content">
+      <div class="map-hero">
+        Germany members map
+        <div class="map-dots">
+          <div class="dot" style="top:30%;left:45%"></div>
+          <div class="dot" style="top:50%;left:55%"></div>
+          <div class="dot" style="top:40%;left:35%"></div>
+          <div class="dot" style="top:60%;left:48%"></div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="member"><div class="av">P</div><div class="name">Priya</div><div class="city">Munich 🇩🇪</div></div>
+        <div class="member"><div class="av">R</div><div class="name">Rahul</div><div class="city">Berlin 🇩🇪</div></div>
+        <div class="member"><div class="av">A</div><div class="name">Anita</div><div class="city">Hamburg 🇩🇪</div></div>
+        <div class="member"><div class="av">V</div><div class="name">Vikram</div><div class="city">Frankfurt 🇩🇪</div></div>
+        <div class="member"><div class="av">S</div><div class="name">Sneha</div><div class="city">Stuttgart 🇩🇪</div></div>
+        <div class="member"><div class="av">K</div><div class="name">Karan</div><div class="city">Cologne 🇩🇪</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active"><span>👥</span>Members</div>
+      <div class="tab"><span>📰</span>Posts</div>
+      <div class="tab"><span>💬</span>Channel</div>
+      <div class="tab"><span>💼</span>Jobs</div>
+    </div>
+  </div>
+
+  <!-- 3 Posts -->
+  <div class="phone" id="screen-posts">
+    <div class="status"></div>
+    <div class="header simple">
+      <div class="avatar"></div>
+      <div class="title">Community Posts</div>
+      <div class="icon-btn">💬</div>
+    </div>
+    <div class="content" style="background:#f0f2f5;">
+      <div class="start-post">⊕ Start a post...</div>
+      <div class="post-card">
+        <div class="post-head"><div class="av">R</div><div><strong>Rahul K.</strong><br/><small style="color:#666">2 days ago</small></div></div>
+        <div class="post-title">Room available in Munich Schwabing</div>
+        <div class="post-body">Furnished room near U6, available from next month. Perfect for students or working professionals.</div>
+      </div>
+      <div class="post-card">
+        <div class="post-head"><div class="av">P</div><div><strong>Priya S.</strong><br/><small style="color:#666">5 days ago</small></div></div>
+        <div class="post-title">Tips for Anmeldung in Berlin</div>
+        <div class="post-body">Book your Bürgeramt appointment early. Here's what documents I needed as a new arrival...</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab"><span>👥</span>Members</div>
+      <div class="tab active"><span>📰</span>Posts</div>
+      <div class="tab"><span>💬</span>Channel</div>
+      <div class="tab"><span>💼</span>Jobs</div>
+    </div>
+  </div>
+
+  <!-- 4 Channel -->
+  <div class="phone" id="screen-channel">
+    <div class="status"></div>
+    <div class="header simple">
+      <div class="avatar"></div>
+      <div class="title">#general</div>
+      <div class="icon-btn">💬</div>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;">
+      <div class="chat-messages">
+        <div class="bubble other"><div class="sender">Priya</div>Anyone know good Indian grocery in Munich?</div>
+        <div class="bubble own">Try the shop near Hauptbahnhof — good prices on spices</div>
+        <div class="bubble other"><div class="sender">Rahul</div>Welcome to all new members! 👋</div>
+        <div class="bubble own">Thanks! Just moved to Berlin last week</div>
+      </div>
+      <div class="input-bar"><input placeholder="Type a message..." readonly /><div class="send">➤</div></div>
+    </div>
+    <div class="tabs">
+      <div class="tab"><span>👥</span>Members</div>
+      <div class="tab"><span>📰</span>Posts</div>
+      <div class="tab active"><span>💬</span>Channel</div>
+      <div class="tab"><span>💼</span>Jobs</div>
+    </div>
+  </div>
+
+  <!-- 5 Jobs -->
+  <div class="phone" id="screen-jobs">
+    <div class="status"></div>
+    <div class="header simple">
+      <div class="avatar"></div>
+      <div class="title">Jobs</div>
+      <div class="icon-btn">💬</div>
+    </div>
+    <div class="content" style="background:#f0f2f5;">
+      <div class="job-card">
+        <div class="job-title">Software Engineer</div>
+        <div class="job-co">Tech Company GmbH</div>
+        <div class="job-loc">Berlin, Germany</div>
+        <div class="apply">↗ Apply</div>
+      </div>
+      <div class="job-card">
+        <div class="job-title">Data Analyst</div>
+        <div class="job-co">Analytics AG</div>
+        <div class="job-loc">Munich, Germany</div>
+        <div class="apply">↗ Apply</div>
+      </div>
+      <div class="job-card">
+        <div class="job-title">Product Manager</div>
+        <div class="job-co">Startup Berlin</div>
+        <div class="job-loc">Remote / Berlin</div>
+        <div class="apply">↗ Apply</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab"><span>👥</span>Members</div>
+      <div class="tab"><span>📰</span>Posts</div>
+      <div class="tab"><span>💬</span>Channel</div>
+      <div class="tab active"><span>💼</span>Jobs</div>
+    </div>
+  </div>
+
+  <!-- 6 Messages -->
+  <div class="phone" id="screen-messages">
+    <div class="status"></div>
+    <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #e4e6eb;font-weight:700;font-size:17px;">Messaging</div>
+    <div class="content" style="background:#f0f2f5;">
+      <div class="conv-row"><div class="hash">#</div><div class="conv-body"><div class="conv-name">Group Channel</div><div class="conv-preview">Community chat for all members</div></div></div>
+      <div style="padding:8px 16px;font-size:13px;font-weight:700;color:#666;text-transform:uppercase;">Recent conversations</div>
+      <div class="conv-row"><div class="av">P</div><div class="conv-body"><div class="conv-name">Priya Sharma</div><div class="conv-preview">See you at the meetup!</div></div></div>
+      <div class="conv-row"><div class="av">R</div><div class="conv-body"><div class="conv-name">Rahul Kumar</div><div class="conv-preview">Thanks for the help with visa docs</div></div></div>
+    </div>
+  </div>
+
+  <!-- 7 DM Chat -->
+  <div class="phone" id="screen-dm">
+    <div class="status"></div>
+    <div class="dm-header">
+      <div class="back">‹</div>
+      <div class="av">P</div>
+      <div><div class="name">Priya Sharma</div><div class="loc">Munich 🇩🇪</div></div>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;">
+      <div class="chat-messages">
+        <div class="bubble other">Hi! Are you still looking for a flatmate?</div>
+        <div class="bubble own">Yes, room is still available</div>
+        <div class="bubble other">Great, can we meet this weekend?</div>
+        <div class="bubble own">Sure, Saturday works for me</div>
+      </div>
+      <div class="input-bar"><input placeholder="Type a message..." readonly /><div class="send">➤</div></div>
+    </div>
+  </div>
+
+  <script>
+    // Visible preview grid when opened in browser (optional)
+    const params = new URLSearchParams(location.search);
+    if (params.get('preview') === '1') {
+      document.querySelectorAll('.phone').forEach((el) => {
+        el.style.position = 'relative';
+        el.style.display = 'flex';
+        el.style.margin = '16px';
+        el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
+        el.style.borderRadius = '24px';
+      });
+      document.body.style.display = 'flex';
+      document.body.style.flexWrap = 'wrap';
+      document.body.style.justifyContent = 'center';
+      document.body.style.padding = '24px';
+      document.body.style.background = '#222';
+    }
+  </script>
+</body>
+</html>

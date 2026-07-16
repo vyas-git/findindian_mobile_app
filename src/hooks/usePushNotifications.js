@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { AppState, PermissionsAndroid, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { useApi, API_URL } from './useApi';
+import { getValidSession } from '../lib/session';
 
 // Importing expo-notifications on Android Expo Go crashes at module load (SDK 53+).
 export function isRemotePushSupported() {
@@ -47,11 +48,22 @@ export function usePushNotifications(onNotificationTap) {
   const responseListener = useRef(null);
   const appStateListener = useRef(null);
   const registeringRef = useRef(false);
+  const handledColdStartRef = useRef(false);
   const apiRequestRef = useRef(apiRequest);
   const onNotificationTapRef = useRef(onNotificationTap);
 
   apiRequestRef.current = apiRequest;
   onNotificationTapRef.current = onNotificationTap;
+
+  const navigateFromNotification = async (data) => {
+    if (!data) return;
+    const session = await getValidSession();
+    if (!session) {
+      console.warn('[push] notification tap ignored — no valid session');
+      return;
+    }
+    onNotificationTapRef.current?.(data);
+  };
 
   useEffect(() => {
     if (!isRemotePushSupported()) {
@@ -149,6 +161,12 @@ export function usePushNotifications(onNotificationTap) {
           return;
         }
 
+        const session = await getValidSession();
+        if (!session) {
+          console.warn('[push] session not ready, will retry on next app focus');
+          return;
+        }
+
         tokenRef.current = token;
         await apiRequestRef.current('/api/users/me/push-token', {
           method: 'POST',
@@ -182,10 +200,22 @@ export function usePushNotifications(onNotificationTap) {
 
     loadNotificationsModule().then((Notifications) => {
       if (!mounted || !Notifications?.addNotificationResponseReceivedListener) return;
+
+      if (!handledColdStartRef.current && Notifications.getLastNotificationResponseAsync) {
+        handledColdStartRef.current = true;
+        Notifications.getLastNotificationResponseAsync()
+          .then((response) => {
+            if (!response) return;
+            const data = response.notification.request.content.data;
+            navigateFromNotification(data);
+          })
+          .catch((e) => console.warn('[push] cold start notification handling failed', e));
+      }
+
       responseListener.current = Notifications.addNotificationResponseReceivedListener(
         (response) => {
           const data = response.notification.request.content.data;
-          onNotificationTapRef.current?.(data);
+          navigateFromNotification(data);
         }
       );
     });

@@ -1,15 +1,11 @@
+import { getValidSession } from './session';
+import { getAppConfig } from './appConfig';
 import { supabase } from './supabase';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
+const { apiUrl: API_URL } = getAppConfig();
 
-export async function apiRequestWithSession(endpoint, options = {}) {
-  const { data } = await supabase.auth.getSession();
-  const session = data?.session;
-  if (!session) {
-    throw new Error('Not authenticated');
-  }
-
-  const response = await fetch(`${API_URL}${endpoint}`, {
+async function authorizedFetch(session, endpoint, options = {}) {
+  return fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -17,10 +13,27 @@ export async function apiRequestWithSession(endpoint, options = {}) {
       ...options.headers,
     },
   });
+}
+
+export async function apiRequestWithSession(endpoint, options = {}) {
+  let session = await getValidSession();
+  if (!session) {
+    throw new Error('Not authenticated');
+  }
+
+  let response = await authorizedFetch(session, endpoint, options);
+
+  if (response.status === 401) {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    session = refreshed?.session ?? null;
+    if (session) {
+      response = await authorizedFetch(session, endpoint, options);
+    }
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(errorData.error || 'Request failed');
+    throw new Error(errorData.error || errorData.message || 'Request failed');
   }
 
   if (response.status === 204) return null;

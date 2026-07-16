@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Image,
   Alert,
@@ -22,12 +23,43 @@ import { NotificationContext } from '../context/NotificationContext';
 import { useAppShell } from '../context/AppShellContext';
 import { useTheme } from '../context/ThemeContext';
 
-function MessageBubble({ message, isOwn, styles }) {
+const TAB_BAR_HEIGHT = 56;
+const SCREEN_HEADER_HEIGHT = 52;
+
+function MessageBubble({ message, isOwn, styles, showSender, onPressSender }) {
+  const senderId = message.user_id || message.from_user_id;
+  const name = message.user_name || 'Member';
+  const avatar = message.user_avatar;
+  const initial = name.charAt(0).toUpperCase();
+  const canOpen = Boolean(showSender && !isOwn && senderId && onPressSender);
+
+  const openSender = () => {
+    if (canOpen) onPressSender(senderId, name);
+  };
+
   return (
     <View style={[styles.bubbleRow, isOwn && styles.bubbleRowOwn]}>
+      {!isOwn && showSender ? (
+        <TouchableOpacity
+          style={styles.bubbleAvatarWrap}
+          onPress={openSender}
+          disabled={!canOpen}
+          activeOpacity={0.7}
+        >
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={styles.bubbleAvatar} />
+          ) : (
+            <View style={styles.bubbleAvatarFallback}>
+              <Text style={styles.bubbleAvatarText}>{initial}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ) : null}
       <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-        {!isOwn && message.user_name ? (
-          <Text style={styles.senderName}>{message.user_name}</Text>
+        {!isOwn && showSender ? (
+          <TouchableOpacity onPress={openSender} disabled={!canOpen} activeOpacity={0.7}>
+            <Text style={styles.senderName}>{name}</Text>
+          </TouchableOpacity>
         ) : null}
         <Text style={styles.bubbleText}>{message.text}</Text>
       </View>
@@ -60,6 +92,12 @@ export default function ChatScreen({ route, navigation }) {
 
   const inDM = mode === 'dm' && Boolean(dmUserId);
   const conversationKey = inDM ? `dm:${dmUserId}` : `channel:${channel?.id || ''}`;
+  const keyboardVerticalOffset =
+    Platform.OS === 'ios'
+      ? inDM
+        ? insets.top + SCREEN_HEADER_HEIGHT
+        : insets.top + SCREEN_HEADER_HEIGHT + TAB_BAR_HEIGHT
+      : 0;
 
   messagesRef.current = messages;
 
@@ -73,8 +111,15 @@ export default function ChatScreen({ route, navigation }) {
       returnTo: undefined,
     });
 
+    if (returnTo === 'Channel') {
+      return;
+    }
     if (returnTo === 'Messages') {
       navigation.getParent()?.navigate('Messages');
+      return;
+    }
+    if (returnTo === 'Posts') {
+      navigation.navigate('Posts');
       return;
     }
     if (returnTo === 'Members') {
@@ -83,6 +128,18 @@ export default function ChatScreen({ route, navigation }) {
     }
     navigation.navigate('Members');
   }, [navigation, route.params?.returnTo]);
+
+  const openSenderDM = useCallback(
+    (userId, userName) => {
+      if (!userId || userId === user?.id) return;
+      navigation.setParams({
+        dmUserId: userId,
+        dmUserName: userName,
+        returnTo: 'Channel',
+      });
+    },
+    [navigation, user?.id]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -196,17 +253,25 @@ export default function ChatScreen({ route, navigation }) {
   );
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       setLoading(true);
       const openingDM = Boolean(route.params?.dmUserId);
-      if (openingDM) {
-        loadChannels().catch(() => {});
-        setLoading(false);
-      } else {
-        await loadChannels();
-        setLoading(false);
+      try {
+        if (openingDM) {
+          loadChannels().catch(() => {});
+        } else {
+          await loadChannels();
+        }
+      } catch (e) {
+        console.warn('loadChannels', e);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [loadChannels, route.params?.dmUserId]);
 
   useEffect(() => {
@@ -233,6 +298,16 @@ export default function ChatScreen({ route, navigation }) {
     pollRef.current = setInterval(() => loadMessages({ scroll: 'if-near-bottom' }), mode === 'dm' ? 3000 : 5000);
     return () => clearInterval(pollRef.current);
   }, [loadMessages, mode]);
+
+  useEffect(() => {
+    const eventName = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const sub = Keyboard.addListener(eventName, () => {
+      if (isNearBottomRef.current) {
+        setTimeout(() => scrollToBottom(true), 80);
+      }
+    });
+    return () => sub.remove();
+  }, [scrollToBottom]);
 
   const handleScroll = (event) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
@@ -319,7 +394,8 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={keyboardVerticalOffset}
     >
       {renderHeader()}
 
@@ -332,6 +408,8 @@ export default function ChatScreen({ route, navigation }) {
             message={item}
             isOwn={item.user_id === user?.id || item.from_user_id === user?.id}
             styles={styles}
+            showSender={!inDM}
+            onPressSender={openSenderDM}
           />
         )}
         style={styles.messageList}
@@ -350,6 +428,8 @@ export default function ChatScreen({ route, navigation }) {
         scrollEventThrottle={16}
         onContentSizeChange={handleContentSizeChange}
         onScrollToIndexFailed={handleScrollToIndexFailed}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       />
 
       <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
@@ -406,16 +486,33 @@ function createStyles(colors) {
     messageList: { flex: 1, backgroundColor: colors.shellBg },
     messageListContent: { paddingVertical: 12, paddingHorizontal: 4 },
     messageListEmpty: { flexGrow: 1, justifyContent: 'center' },
-    bubbleRow: { paddingHorizontal: 12, paddingVertical: 4, alignItems: 'flex-start' },
-    bubbleRowOwn: { alignItems: 'flex-end' },
-    bubble: { maxWidth: '78%', padding: 10, borderRadius: 12 },
+    bubbleRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      alignItems: 'flex-end',
+      gap: 8,
+    },
+    bubbleRowOwn: { alignItems: 'flex-end', justifyContent: 'flex-end' },
+    bubbleAvatarWrap: { marginBottom: 2 },
+    bubbleAvatar: { width: 32, height: 32, borderRadius: 16 },
+    bubbleAvatarFallback: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.searchBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    bubbleAvatarText: { fontWeight: '700', color: colors.primary, fontSize: 13 },
+    bubble: { maxWidth: '72%', padding: 10, borderRadius: 12 },
     bubbleOwn: { backgroundColor: colors.sentBubble },
     bubbleOther: {
       backgroundColor: colors.receivedBubble,
       borderWidth: 1,
       borderColor: colors.divider,
     },
-    senderName: { fontSize: 11, fontWeight: '700', color: colors.primary, marginBottom: 2 },
+    senderName: { fontSize: 12, fontWeight: '700', color: colors.primary, marginBottom: 4 },
     bubbleText: { fontSize: 15, lineHeight: 20, color: colors.bubbleText },
     empty: { textAlign: 'center', color: colors.textSecondary, padding: 24, fontSize: 15 },
     inputBar: {

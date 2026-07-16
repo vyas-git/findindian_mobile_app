@@ -1,7 +1,9 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import Constants from 'expo-constants';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { apiRequestWithSession } from '../lib/api';
+import { getValidSession, refreshSessionIfNeeded } from '../lib/session';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as QueryParams from 'expo-auth-session/build/QueryParams';
 import * as WebBrowser from 'expo-web-browser';
@@ -58,8 +60,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const getSession = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
-    return data?.session ?? null;
+    return getValidSession();
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -88,6 +89,7 @@ export const AuthProvider = ({ children }) => {
     let mounted = true;
 
     WebBrowser.warmUpAsync();
+    supabase.auth.startAutoRefresh();
 
     (async () => {
       try {
@@ -96,15 +98,16 @@ export const AuthProvider = ({ children }) => {
           const session = await createSessionFromUrl(initialUrl);
           if (mounted && session?.user) {
             setUser(session.user);
-            await syncUserAfterAuth();
+            // Don't block the loading gate on profile sync.
+            syncUserAfterAuth();
           }
         }
 
-        const { data } = await supabase.auth.getSession();
+        const session = await getValidSession();
         if (mounted) {
-          setUser(data?.session?.user ?? null);
-          if (data?.session?.user) {
-            await syncUserAfterAuth();
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            syncUserAfterAuth();
           }
         }
       } catch (e) {
@@ -114,10 +117,36 @@ export const AuthProvider = ({ children }) => {
       }
     })();
 
+    const appStateSub = AppState.addEventListener('change', async (nextState) => {
+      if (nextState === 'active') {
+        supabase.auth.startAutoRefresh();
+        try {
+          const session = await refreshSessionIfNeeded();
+          if (session?.user) {
+            setUser(session.user);
+            syncUserAfterAuth();
+            return;
+          }
+          // Only sign the user out when there is truly no stored session.
+          const { data } = await supabase.auth.getSession();
+          if (!data?.session) {
+            setUser(null);
+            setUserProfile(null);
+          }
+        } catch (e) {
+          console.warn('session refresh on resume error', e);
+        }
+        return;
+      }
+      if (nextState === 'background' || nextState === 'inactive') {
+        supabase.auth.stopAutoRefresh();
+      }
+    });
+
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        await syncUserAfterAuth();
+        syncUserAfterAuth();
       } else {
         setUserProfile(null);
       }
@@ -128,7 +157,7 @@ export const AuthProvider = ({ children }) => {
         const session = await createSessionFromUrl(url);
         if (session?.user) {
           setUser(session.user);
-          await syncUserAfterAuth();
+          syncUserAfterAuth();
         }
       } catch (e) {
         console.warn('Auth callback error', e);
@@ -137,8 +166,10 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       mounted = false;
+      appStateSub?.remove?.();
       listener?.subscription?.unsubscribe?.();
       subscription?.remove?.();
+      supabase.auth.stopAutoRefresh();
       WebBrowser.coolDownAsync();
     };
   }, [syncUserAfterAuth]);

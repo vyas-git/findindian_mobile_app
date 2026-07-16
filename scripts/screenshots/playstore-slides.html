@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>findIndian.de Play Store Slides</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; }
+    .slide {
+      width: 1080px;
+      height: 1920px;
+      position: relative;
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 72px 48px 56px;
+    }
+    .slide.active { display: flex; }
+    .bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 35%, #7c3aed 100%);
+      z-index: 0;
+    }
+    .bg::after {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      top: -120px;
+      right: -100px;
+    }
+    .content { position: relative; z-index: 1; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+    .brand img { width: 56px; height: 56px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+    .brand span { color: #fff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .headline { color: #fff; font-size: 52px; font-weight: 800; text-align: center; line-height: 1.15; margin-bottom: 16px; max-width: 900px; }
+    .subhead { color: rgba(255,255,255,0.92); font-size: 26px; text-align: center; line-height: 1.4; margin-bottom: 40px; max-width: 880px; font-weight: 500; }
+    .phone-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .phone {
+      width: 420px;
+      border-radius: 36px;
+      padding: 12px;
+      background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.45), 0 0 0 2px rgba(255,255,255,0.12);
+    }
+    .phone-screen {
+      border-radius: 28px;
+      overflow: hidden;
+      background: #f0f2f5;
+      line-height: 0;
+      width: 396px;
+      height: 858px;
+    }
+    .phone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+    .badge {
+      margin-top: 32px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      padding: 12px 28px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- Slides injected by script -->
+  <script>
+    const SLIDES = [
+      {
+        id: 'members',
+        headline: 'Willkommen, Priya!',
+        subhead: '270+ Indians in Deutschland 🇮🇳 — find members on the map & say Hallo',
+        image: 'enhanced/members.png',
+        badge: 'Members & Map',
+      },
+      {
+        id: 'sidebar',
+        headline: 'Your community hub',
+        subhead: 'Guides for visa, Anmeldung, jobs & more — curated for Indians in Germany',
+        image: 'enhanced/sidebar.png',
+        badge: 'Quick links & settings',
+      },
+      {
+        id: 'posts',
+        headline: 'Community Posts',
+        subhead: 'Share accommodation, visa tips & questions with fellow Indians',
+        image: 'enhanced/posts.png',
+        badge: 'Posts & discussions',
+      },
+      {
+        id: 'channel',
+        headline: 'Join #general',
+        subhead: 'Ask questions, share leads & connect with the whole community',
+        image: 'enhanced/channel.png',
+        badge: 'Group channel',
+      },
+      {
+        id: 'jobs',
+        headline: 'Jobs in Germany',
+        subhead: 'Browse openings from companies across Deutschland',
+        image: 'enhanced/jobs.png',
+        badge: 'Job listings',
+      },
+      {
+        id: 'messages',
+        headline: 'Message anyone',
+        subhead: 'DM members directly or jump into the group channel',
+        image: 'enhanced/messages.png',
+        badge: 'Private & group chat',
+      },
+      {
+        id: 'dark',
+        headline: 'Light & dark mode',
+        subhead: 'Comfortable browsing day or night — your choice',
+        image: 'enhanced/dark.png',
+        badge: 'Appearance',
+      },
+    ];
+
+    const base = new URL('.', location.href).href;
+    const iconUrl = new URL('../../assets/icon.png', base).href;
+
+    SLIDES.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'slide' + (i === 0 ? ' active' : '');
+      div.id = 'slide-' + s.id;
+      div.innerHTML = `
+        <div class="bg"></div>
+        <div class="content">
+          <div class="brand"><img src="${iconUrl}" alt="" /><span>findIndian.de</span></div>
+          <h1 class="headline">${s.headline}</h1>
+          <p class="subhead">${s.subhead}</p>
+          <div class="phone-wrap">
+            <div class="phone">
+              <div class="phone-screen">
+                <img src="${base}enhanced/${s.id}.png" alt="${s.id}" />
+              </div>
+            </div>
+          </div>
+          <div class="badge">${s.badge}</div>
+        </div>`;
+      document.body.appendChild(div);
+    });
+
+    const params = new URLSearchParams(location.search);
+    const target = params.get('slide');
+    if (target) {
+      document.querySelectorAll('.slide').forEach((el) => {
+        el.classList.toggle('active', el.id === 'slide-' + target);
+      });
+    }
+  </script>
+</body>
+</html>

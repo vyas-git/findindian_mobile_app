@@ -1,19 +1,19 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { getAppConfig, isSupabaseConfigured as checkSupabaseConfigured } from './appConfig';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://your-project.supabase.co';
-const SUPABASE_PUBLISH_KEY = process.env.EXPO_PUBLIC_SUPABASE_PUBLISH_KEY || process.env.SUPABASE_PUBLISH_KEY || process.env.SUPABASE_ANON_KEY || 'your-publish-key';
+const { supabaseUrl, supabasePublishKey } = getAppConfig();
 
-export const isSupabaseConfigured = Boolean(
-  SUPABASE_URL && SUPABASE_PUBLISH_KEY && !SUPABASE_URL.includes('your-project') && !SUPABASE_PUBLISH_KEY.includes('your-')
-);
+export const isSupabaseConfigured = checkSupabaseConfigured({ supabaseUrl, supabasePublishKey });
 
 if (!isSupabaseConfigured) {
-  console.error('Supabase placeholder detected. Set SUPABASE_URL and SUPABASE_PUBLISH_KEY in .env or app.json extras.');
+  console.error(
+    'Supabase not configured. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISH_KEY in .env, app.json extra, or eas.json build env.'
+  );
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISH_KEY, {
+export const supabase = createClient(supabaseUrl, supabasePublishKey, {
   auth: {
     storage: AsyncStorage,
     persistSession: true,

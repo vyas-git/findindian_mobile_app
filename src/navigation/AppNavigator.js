@@ -214,17 +214,32 @@ function AuthenticatedApp({ navigationRef }) {
   const { colors } = useTheme();
   const handleNotificationTap = useCallback(
     (data) => {
-      if (!data || !navigationRef.current) return;
-      if (data.type === 'dm' && data.userId) {
-        navigationRef.current.navigate('Main', {
-          screen: 'Channel',
-          params: { dmUserId: data.userId },
-        });
-      } else if (data.type === 'channel') {
-        navigationRef.current.navigate('Main', { screen: 'Channel' });
-      } else if (data.type === 'post' && data.postId) {
-        navigationRef.current.navigate('PostView', { postId: data.postId });
-      }
+      if (!data) return;
+
+      const navigate = () => {
+        if (!navigationRef.current?.isReady?.()) return false;
+        if (data.type === 'dm' && data.userId) {
+          navigationRef.current.navigate('Main', {
+            screen: 'Channel',
+            params: { dmUserId: data.userId },
+          });
+        } else if (data.type === 'channel') {
+          navigationRef.current.navigate('Main', { screen: 'Channel' });
+        } else if (data.type === 'post' && data.postId) {
+          navigationRef.current.navigate('PostView', { postId: data.postId });
+        }
+        return true;
+      };
+
+      if (navigate()) return;
+
+      let attempts = 0;
+      const retry = setInterval(() => {
+        attempts += 1;
+        if (navigate() || attempts >= 20) {
+          clearInterval(retry);
+        }
+      }, 100);
     },
     [navigationRef]
   );

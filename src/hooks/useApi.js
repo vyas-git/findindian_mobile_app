@@ -1,26 +1,40 @@
 import { useContext, useCallback } from 'react';
 import { AuthContext } from '../context/AuthProvider';
+import { getValidSession } from '../lib/session';
+import { supabase } from '../lib/supabase';
+import { getAppConfig } from '../lib/appConfig';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
+const { apiUrl: API_URL } = getAppConfig();
 
 export function useApi() {
-  const { getSession, signOut } = useContext(AuthContext);
+  const { signOut } = useContext(AuthContext);
 
   const apiRequest = useCallback(
     async (endpoint, options = {}) => {
-      const session = await getSession();
+      let session = await getValidSession();
       if (!session) {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-          ...options.headers,
-        },
-      });
+      const doFetch = (activeSession) =>
+        fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${activeSession.access_token}`,
+            ...options.headers,
+          },
+        });
+
+      let response = await doFetch(session);
+
+      if (response.status === 401) {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshed?.session) {
+          session = refreshed.session;
+          response = await doFetch(session);
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -48,7 +62,7 @@ export function useApi() {
       if (response.status === 204) return null;
       return response.json();
     },
-    [getSession, signOut]
+    [signOut]
   );
 
   return { apiRequest, API_URL };

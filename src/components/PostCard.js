@@ -1,35 +1,58 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Pressable } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
-export default function PostCard({ post, onPress }) {
+export default function PostCard({ post, onPress, onPressAuthor }) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const initial = (post.author_name || post.user_name || 'U').charAt(0).toUpperCase();
+  const authorName = post.author_name || post.user_name || 'User';
+  const authorId = post.user_id;
+  const avatar = post.user_avatar || post.avatar_url;
+  const initial = authorName.charAt(0).toUpperCase();
+  const canOpenAuthor = Boolean(authorId && onPressAuthor);
+
+  const openAuthor = () => {
+    if (canOpenAuthor) onPressAuthor(post);
+  };
+
+  const openPost = () => onPress?.(post);
+
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress?.(post)}>
-      <View style={styles.header}>
-        {post.user_avatar || post.avatar_url ? (
-          <Image source={{ uri: post.user_avatar || post.avatar_url }} style={styles.avatar} />
+    <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.header}
+        onPress={openAuthor}
+        disabled={!canOpenAuthor}
+        activeOpacity={0.7}
+      >
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarFallback}>
             <Text style={styles.avatarText}>{initial}</Text>
           </View>
         )}
-        <View>
-          <Text style={styles.author}>{post.author_name || post.user_name || 'User'}</Text>
-          <Text style={styles.meta}>{post.created_at ? new Date(post.created_at).toLocaleDateString() : ''}</Text>
+        <View style={styles.authorInfo}>
+          <Text style={styles.author}>{authorName}</Text>
+          <Text style={styles.meta}>
+            {post.created_at ? new Date(post.created_at).toLocaleDateString() : ''}
+          </Text>
         </View>
-      </View>
-      {post.title ? <Text style={styles.title}>{post.title}</Text> : null}
-      <Text style={styles.body} numberOfLines={4}>
-        {post.content || post.text || ''}
-      </Text>
-      {post.image_url ? <Image source={{ uri: post.image_url }} style={styles.image} resizeMode="cover" /> : null}
-      <View style={styles.footer}>
-        <Text style={styles.comments}>{post.comment_count ?? 0} comments</Text>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      <Pressable onPress={openPost}>
+        {post.title ? <Text style={styles.title}>{post.title}</Text> : null}
+        <Text style={styles.body} numberOfLines={4}>
+          {post.content || post.text || ''}
+        </Text>
+        {post.image_url ? (
+          <Image source={{ uri: post.image_url }} style={styles.image} resizeMode="cover" />
+        ) : null}
+        <View style={styles.footer}>
+          <Text style={styles.comments}>{post.comment_count ?? 0} comments</Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -56,7 +79,8 @@ function createStyles(colors) {
       marginRight: 10,
     },
     avatarText: { fontWeight: '700', color: colors.primary },
-    author: { fontWeight: '700', fontSize: 14, color: colors.textPrimary },
+    authorInfo: { flex: 1 },
+    author: { fontWeight: '700', fontSize: 14, color: colors.primary },
     meta: { color: colors.textSecondary, fontSize: 12 },
     title: { fontWeight: '700', fontSize: 16, marginBottom: 6, color: colors.textPrimary },
     body: { color: colors.textPrimary, lineHeight: 20, fontSize: 14 },

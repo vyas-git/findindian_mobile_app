@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Enhanced Screens</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; background: #111; }
+    .phone {
+      width: 390px; height: 844px; overflow: hidden;
+      position: fixed; left: 0; top: 0; display: none; flex-direction: column;
+      background: #f0f2f5;
+    }
+    .phone.active { display: flex; }
+    .phone.dark { background: #121212; color: #f5f5f5; }
+    .status { height: 36px; background: inherit; flex-shrink: 0; }
+    .header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px 10px; background: #fff; border-bottom: 1px solid #e4e6eb;
+    }
+    .phone.dark .header { background: #1a1a1a; border-color: #333; }
+    .header.simple .title { flex: 1; text-align: center; font-weight: 700; font-size: 17px; }
+    .phone.dark .header.simple .title { color: #f5f5f5; }
+    .av { border-radius: 50%; object-fit: cover; background: #eef3f8; }
+    .av-36 { width: 36px; height: 36px; }
+    .av-40 { width: 40px; height: 40px; }
+    .av-48 { width: 48px; height: 48px; }
+    .av-64 { width: 64px; height: 64px; }
+    .search {
+      flex: 1; display: flex; align-items: center; gap: 6px;
+      background: #eef3f8; border-radius: 8px; padding: 0 10px; height: 40px;
+      color: #666; font-size: 14px;
+    }
+    .phone.dark .search { background: #2a2a2a; color: #aaa; }
+    .icon-btn { width: 36px; text-align: center; font-size: 20px; position: relative; }
+    .badge9 { position: absolute; top: -4px; right: 0; background: #cc1016; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 8px; }
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .tabs {
+      display: flex; justify-content: space-around; height: 56px;
+      background: #fff; border-top: 1px solid #e4e6eb; font-size: 11px; font-weight: 600; color: #666; flex-shrink: 0;
+    }
+    .phone.dark .tabs { background: #1a1a1a; border-color: #333; color: #888; }
+    .tabs .active { color: #1a1a1a; }
+    .phone.dark .tabs .active { color: #f5f5f5; }
+    .tab { text-align: center; padding-top: 6px; }
+    .tab span { display: block; font-size: 18px; margin-bottom: 2px; }
+
+    /* Members */
+    .map { height: 260px; background: linear-gradient(160deg, #a8c5e8 0%, #8fb8d9 50%, #c5d9a8 100%); position: relative; }
+    .map-label { position: absolute; bottom: 8px; left: 8px; font-size: 9px; color: #555; background: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 4px; }
+    .cluster { position: absolute; background: #2563eb; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 12px; border: 2px solid #fff; }
+    .hero-card { background: #fff; border-radius: 20px 20px 0 0; margin-top: -14px; padding: 16px 12px 8px; flex: 1; }
+    .phone.dark .hero-card { background: #1e1e1e; }
+    .hero-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .phone.dark .hero-card h2 { color: #fff; }
+    .hero-sub { font-size: 13px; color: #666; margin-bottom: 14px; }
+    .phone.dark .hero-sub { color: #aaa; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .member { text-align: center; }
+    .member .name { font-size: 12px; font-weight: 600; margin-top: 6px; }
+    .phone.dark .member .name { color: #eee; }
+    .member .loc { font-size: 10px; color: #666; margin-top: 2px; }
+    .member .de { font-size: 10px; color: #888; margin-top: 2px; }
+
+    /* Sidebar */
+    .drawer { background: #fff; height: 100%; padding: 16px; overflow: hidden; }
+    .drawer-top { display: flex; justify-content: flex-end; margin-bottom: 8px; font-size: 22px; color: #666; }
+    .profile-block { display: flex; gap: 12px; margin-bottom: 16px; }
+    .profile-block .info h3 { font-size: 18px; font-weight: 700; }
+    .profile-block .info a { color: #2563eb; font-size: 14px; text-decoration: none; }
+    .profile-block .info .city { font-size: 13px; color: #666; margin-top: 4px; }
+    .email-btn { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid #e4e6eb; border-radius: 8px; margin-bottom: 20px; font-weight: 600; font-size: 14px; }
+    .section-h { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 8px; }
+    .nav-item { padding: 12px 8px; font-size: 15px; border-radius: 6px; }
+    .nav-item.active { background: #f3f2ef; font-weight: 600; }
+    .guide-item { display: flex; align-items: center; gap: 10px; padding: 10px 4px; font-size: 14px; color: #2563eb; }
+
+    /* Posts */
+    .feed { flex: 1; overflow: hidden; background: #f0f2f5; padding-bottom: 8px; }
+    .start-post { display: flex; align-items: center; gap: 10px; margin: 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; color: #666; }
+    .post { margin: 0 12px 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #e4e6eb; }
+    .post-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .post-head .meta { font-size: 12px; color: #666; }
+    .post h4 { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .post p { font-size: 14px; color: #444; line-height: 1.4; }
+    .post .comments { font-size: 12px; color: #888; margin-top: 10px; }
+
+    /* Chat */
+    .chat-msgs { flex: 1; padding: 12px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+    .bubble { max-width: 88%; padding: 10px 12px; border-radius: 12px; font-size: 14px; line-height: 1.35; }
+    .bubble.o { background: #fff; border: 1px solid #e4e6eb; align-self: flex-start; }
+    .bubble .who { font-size: 11px; font-weight: 700; color: #2563eb; margin-bottom: 3px; }
+    .input-bar { display: flex; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #e4e6eb; }
+    .input-bar input { flex: 1; border: 1px solid #e5e5e5; border-radius: 20px; padding: 10px 14px; font-size: 15px; }
+    .send { width: 44px; height: 44px; border-radius: 22px; background: #25D366; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+    /* Jobs */
+    .job { margin: 12px; padding: 16px; background: #fff; border-radius: 12px; border: 1px solid #e4e6eb; }
+    .job h4 { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .job .co { color: #2563eb; font-size: 14px; margin-bottom: 4px; }
+    .job .loc { color: #888; font-size: 13px; }
+
+    /* Messages */
+    .msg-nav { padding: 12px 16px; background: #fff; border-bottom: 1px solid #e4e6eb; font-weight: 700; font-size: 17px; }
+    .conv { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #fff; border-bottom: 1px solid #e4e6eb; }
+    .conv .hash { width: 48px; height: 48px; border-radius: 24px; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #25D366; }
+    .conv .body { flex: 1; }
+    .conv .name { font-weight: 600; font-size: 16px; }
+    .conv .prev { font-size: 13px; color: #666; margin-top: 2px; }
+    .section-label { padding: 8px 16px; font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; background: #f0f2f5; }
+  </style>
+</head>
+<body>
+<script>
+const AV = {
+  priya: 'https://randomuser.me/api/portraits/women/44.jpg',
+  ananya: 'https://randomuser.me/api/portraits/women/68.jpg',
+  kavitha: 'https://randomuser.me/api/portraits/women/65.jpg',
+  sneha: 'https://randomuser.me/api/portraits/women/32.jpg',
+  meera: 'https://randomuser.me/api/portraits/women/21.jpg',
+  aditi: 'https://randomuser.me/api/portraits/women/57.jpg',
+  rahul: 'https://randomuser.me/api/portraits/men/32.jpg',
+  arjun: 'https://randomuser.me/api/portraits/men/22.jpg',
+  vikram: 'https://randomuser.me/api/portraits/men/75.jpg',
+  rohan: 'https://randomuser.me/api/portraits/men/46.jpg',
+  aditya: 'https://randomuser.me/api/portraits/men/11.jpg',
+  karan: 'https://randomuser.me/api/portraits/men/52.jpg',
+};
+
+function headerSearch(avatar, showBadge = true) {
+  return `<div class="status"></div>
+    <div class="header">
+      <img class="av av-36" src="${avatar}" alt="" />
+      <div class="search">🔍 Search by name, city</div>
+      <div class="icon-btn">💬${showBadge ? '<span class="badge9">9+</span>' : ''}</div>
+    </div>`;
+}
+
+function headerSimple(title, avatar) {
+  return `<div class="status"></div>
+    <div class="header simple">
+      <img class="av av-36" src="${avatar}" alt="" />
+      <div class="title">${title}</div>
+      <div class="icon-btn">💬<span class="badge9">9+</span></div>
+    </div>`;
+}
+
+function tabs(active) {
+  const items = [
+    ['Members', '👥'], ['Posts', '📰'], ['Channel', '💬'], ['Jobs', '💼']
+  ];
+  return `<div class="tabs">${items.map(([l, ic]) =>
+    `<div class="tab${l === active ? ' active' : ''}"><span>${ic}</span>${l}</div>`
+  ).join('')}</div>`;
+}
+
+const members = `
+<div class="phone active" id="screen-members">
+  ${headerSearch(AV.priya)}
+  <div class="content">
+    <div class="map">
+      <div class="cluster" style="top:38%;left:62%">+30</div>
+      <div class="cluster" style="top:42%;left:48%">+145</div>
+      <div class="cluster" style="top:55%;left:35%">+10</div>
+      <div class="cluster" style="top:30%;left:72%">+5</div>
+      <div class="map-label">Leaflet | © OpenStreetMap</div>
+    </div>
+    <div class="hero-card">
+      <h2>Willkommen Priya</h2>
+      <p class="hero-sub">270 Inder 🇮🇳 in Deutschland 🇩🇪, Say Hallo !!</p>
+      <div class="grid">
+        <div class="member"><img class="av av-64" src="${AV.ananya}" /><div class="name">Ananya Iyer</div><div class="loc">📍 Chennai</div><div class="de">Frankfurt 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.rahul}" /><div class="name">Rahul Kumar</div><div class="loc">📍 Pune</div><div class="de">Munich 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.kavitha}" /><div class="name">Kavitha Reddy</div><div class="loc">📍 Hyderabad</div><div class="de">Berlin 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.arjun}" /><div class="name">Arjun Menon</div><div class="loc">📍 Kochi</div><div class="de">Hamburg 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.sneha}" /><div class="name">Sneha Patel</div><div class="loc">📍 Ahmedabad</div><div class="de">Stuttgart 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.rohan}" /><div class="name">Rohan Gupta</div><div class="loc">📍 Delhi</div><div class="de">Cologne 🇩🇪</div></div>
+      </div>
+    </div>
+  </div>
+  ${tabs('Members')}
+</div>`;
+
+const sidebar = `
+<div class="phone" id="screen-sidebar">
+  <div class="status"></div>
+  <div class="drawer">
+    <div class="drawer-top">✕</div>
+    <div class="profile-block">
+      <img class="av av-48" src="${AV.ananya}" />
+      <div class="info">
+        <h3>Ananya Sharma</h3>
+        <a href="#">View Profile</a> · <a href="#">Settings</a>
+        <div class="city">Berlin, Germany</div>
+      </div>
+    </div>
+    <div class="email-btn">✉️ Email all members</div>
+    <div class="section-h">Appearance</div>
+    <div class="nav-item active">☀️ Light ✓</div>
+    <div class="nav-item">🌙 Dark</div>
+    <div class="section-h">Navigation</div>
+    <div class="nav-item active">Members (270+)</div>
+    <div class="nav-item">Posts</div>
+    <div class="nav-item">Channel</div>
+    <div class="nav-item">Jobs</div>
+    <div class="section-h">Quick links</div>
+    <div class="guide-item">🎓 Student visa checklist</div>
+    <div class="guide-item">🎖️ Opportunity Card</div>
+    <div class="guide-item">🏠 City registration</div>
+  </div>
+</div>`;
+
+const posts = `
+<div class="phone" id="screen-posts">
+  ${headerSimple('Community Posts', AV.rahul)}
+  <div class="feed">
+    <div class="start-post">⊕ Start a post...</div>
+    <div class="post">
+      <div class="post-head"><img class="av av-36" src="${AV.meera}" /><div><strong>Meera Nair</strong><div class="meta">21/03/2026</div></div></div>
+      <h4>Visa renewal — Chancenkarte</h4>
+      <p>Hi all, I came to Berlin in 2025 on Chancenkarte. Sharing my experience with renewal...</p>
+      <div class="comments">3 comments</div>
+    </div>
+    <div class="post">
+      <div class="post-head"><img class="av av-36" src="${AV.aditya}" /><div><strong>Aditya Joshi</strong><div class="meta">17/02/2026</div></div></div>
+      <h4>Accommodation in Rostock</h4>
+      <p>Incoming student at Universität Rostock looking for long-term accommodation near campus...</p>
+      <div class="comments">1 comment</div>
+    </div>
+  </div>
+  ${tabs('Posts')}
+</div>`;
+
+const channel = `
+<div class="phone" id="screen-channel">
+  ${headerSimple('#general', AV.kavitha)}
+  <div class="content">
+    <div class="chat-msgs">
+      <div class="bubble o"><div class="who">Priya Sharma</div>Hi everyone! Looking for job referrals in software testing in Germany 🙏</div>
+      <div class="bubble o"><div class="who">Rahul Kumar</div>Accommodation available for students in Berlin — DM me</div>
+      <div class="bubble o"><div class="who">Ananya Iyer</div>Radhe Radhe 🙏 Welcome to all new members!</div>
+      <div class="bubble o"><div class="who">Arjun Menon</div>Anyone know good Indian grocery in Munich?</div>
+    </div>
+    <div class="input-bar"><input placeholder="Type a message..." readonly /><div class="send">➤</div></div>
+  </div>
+  ${tabs('Channel')}
+</div>`;
+
+const jobs = `
+<div class="phone" id="screen-jobs">
+  ${headerSimple('Jobs', AV.arjun)}
+  <div class="content" style="overflow:auto">
+    <div class="job"><h4>Software Engineer (m/w/d)</h4><div class="co">TechVision GmbH</div><div class="loc">Berlin</div></div>
+    <div class="job"><h4>Marketing Manager (m/w/d)</h4><div class="co">Yunicorn</div><div class="loc">Hamburg</div></div>
+    <div class="job"><h4>DevOps Engineer (m/w/d)</h4><div class="co">DieEnergiekoppler GmbH</div><div class="loc">Dresden</div></div>
+    <div class="job"><h4>Data Analyst (m/w/d)</h4><div class="co">Analytics AG</div><div class="loc">Munich</div></div>
+  </div>
+  ${tabs('Jobs')}
+</div>`;
+
+const messages = `
+<div class="phone" id="screen-messages">
+  <div class="status"></div>
+  <div class="msg-nav">‹ Messaging</div>
+  <div class="content" style="background:#f0f2f5">
+    <div class="conv"><div class="hash">#</div><div class="body"><div class="name">Group Channel</div><div class="prev">Community chat for all members</div></div></div>
+    <div class="section-label">Recent conversations</div>
+    <div class="conv"><img class="av av-48" src="${AV.priya}" /><div class="body"><div class="name">Priya Sharma</div><div class="prev">See you at the meetup!</div></div></div>
+    <div class="conv"><img class="av av-48" src="${AV.rahul}" /><div class="body"><div class="name">Rahul Kumar</div><div class="prev">Thanks for the visa tips</div></div></div>
+    <div class="conv"><img class="av av-48" src="${AV.ananya}" /><div class="body"><div class="name">Ananya Iyer</div><div class="prev">Tap to open conversation</div></div></div>
+    <div class="conv"><img class="av av-48" src="${AV.kavitha}" /><div class="body"><div class="name">Kavitha Reddy</div><div class="prev">Room still available?</div></div></div>
+    <div class="conv"><img class="av av-48" src="${AV.arjun}" /><div class="body"><div class="name">Arjun Menon</div><div class="prev">Let's connect in Munich</div></div></div>
+    <div class="conv"><img class="av av-48" src="${AV.sneha}" /><div class="body"><div class="name">Sneha Patel</div><div class="prev">Tap to open conversation</div></div></div>
+  </div>
+</div>`;
+
+const dark = `
+<div class="phone dark" id="screen-dark">
+  ${headerSearch(AV.vikram).replace('background: #fff', 'background: #1a1a1a')}
+  <div class="content">
+    <div class="map" style="filter:brightness(0.75)">
+      <div class="cluster" style="top:42%;left:48%">+145</div>
+      <div class="cluster" style="top:38%;left:62%">+30</div>
+      <div class="map-label">Leaflet | © OpenStreetMap</div>
+    </div>
+    <div class="hero-card">
+      <h2>Willkommen Vikram</h2>
+      <p class="hero-sub">270 Inder 🇮🇳 in Deutschland 🇩🇪, Say Hallo !!</p>
+      <div class="grid">
+        <div class="member"><img class="av av-64" src="${AV.aditi}" /><div class="name">Aditi Verma</div><div class="loc">📍 Jaipur</div><div class="de">Berlin 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.karan}" /><div class="name">Karan Mehta</div><div class="loc">📍 Mumbai</div><div class="de">Frankfurt 🇩🇪</div></div>
+        <div class="member"><img class="av av-64" src="${AV.meera}" /><div class="name">Meera Nair</div><div class="loc">📍 Bangalore</div><div class="de">Munich 🇩🇪</div></div>
+      </div>
+    </div>
+  </div>
+  ${tabs('Members')}
+</div>`;
+
+document.body.innerHTML = members + sidebar + posts + channel + jobs + messages + dark;
+
+const target = new URLSearchParams(location.search).get('screen');
+if (target) {
+  document.querySelectorAll('.phone').forEach((el) => {
+    el.classList.toggle('active', el.id === 'screen-' + target);
+  });
+}
+</script>
+</body>
+</html>

@@ -2,25 +2,35 @@
   "expo": {
     "name": "findIndian.de",
     "slug": "findIndian-de",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/icon.png",
+      "backgroundColor": "#ffffff",
+      "resizeMode": "contain"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.findindian.de",
+      "buildNumber": "10",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
-        ]
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
       }
     },
     "android": {
+      "versionCode": 10,
+      "softwareKeyboardLayoutMode": "resize",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#2563eb",
+        "foregroundImage": "./assets/icon.png"
       },
       "package": "com.findindian.de",
       "googleServicesFile": "./google-services.json",
@@ -36,8 +46,7 @@
     "scheme": "findindianmobile",
     "extra": {
       "SUPABASE_URL": "https://nvksbmrjhwqgfcysqbcj.supabase.co",
-      "SUPABASE_ANON_KEY": "your-anon-key",
-      "SUPABASE_PUBLISH_KEY": "your-publish-key",
+      "SUPABASE_PUBLISH_KEY": "sb_publishable_ilgrVCCUsHyGLr3-cqZEwA_Xuan2Ri4",
       "eas": {
         "projectId": "bde927a2-baf3-4ddb-a1e6-8c8b9ee00df9"
       }
@@ -46,10 +55,21 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/bde927a2-baf3-4ddb-a1e6-8c8b9ee00df9"
+      "url": "https://u.expo.dev/bde927a2-baf3-4ddb-a1e6-8c8b9ee00df9",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "plugins": [
       "expo-dev-client",
+      "expo-updates",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/icon.png",
+          "imageWidth": 120
+        }
+      ],
       [
         "expo-web-browser",
         {

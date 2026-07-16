@@ -7,12 +7,24 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nvksbmrjhwqgfcysqbcj.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISH_KEY": "sb_publishable_ilgrVCCUsHyGLr3-cqZEwA_Xuan2Ri4",
+        "EXPO_PUBLIC_API_URL": "https://api.findindian.de"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nvksbmrjhwqgfcysqbcj.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISH_KEY": "sb_publishable_ilgrVCCUsHyGLr3-cqZEwA_Xuan2Ri4",
+        "EXPO_PUBLIC_API_URL": "https://api.findindian.de"
+      },
       "android": {
         "buildType": "apk",
         "credentialsSource": "remote"
@@ -20,6 +32,12 @@
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nvksbmrjhwqgfcysqbcj.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISH_KEY": "sb_publishable_ilgrVCCUsHyGLr3-cqZEwA_Xuan2Ri4",
+        "EXPO_PUBLIC_API_URL": "https://api.findindian.de"
+      },
       "android": {
         "credentialsSource": "remote"
       }
