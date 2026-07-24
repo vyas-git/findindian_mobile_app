@@ -7,6 +7,15 @@ export const LOCAL_API_URL = 'http://localhost:8080';
 
 let didLogApiEnv = false;
 
+function isLocalApiHost(hostname) {
+  if (!hostname) return false;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+  if (/^192\.168\.\d+\.\d+$/.test(hostname)) return true;
+  if (/^10\.\d+\.\d+\.\d+$/.test(hostname)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(hostname)) return true;
+  return false;
+}
+
 /** Metro / Expo Go host (your machine LAN IP when the app runs on a phone). */
 function getExpoDevHost() {
   const candidates = [
@@ -27,7 +36,7 @@ function getExpoDevHost() {
 }
 
 /**
- * On a physical device / emulator, localhost is the phone — rewrite to the
+ * On a physical device in __DEV__, localhost is the phone — rewrite to the
  * machine IP Expo is already using for Metro (e.g. 192.168.x.x:8080).
  */
 function rewriteLocalhostForDevice(apiUrl) {
@@ -45,32 +54,52 @@ function rewriteLocalhostForDevice(apiUrl) {
   }
 }
 
+function pickConfiguredUrl() {
+  return (
+    process.env.EXPO_PUBLIC_API_URL ||
+    extra.EXPO_PUBLIC_API_URL ||
+    extra.API_URL ||
+    ''
+  );
+}
+
 function resolveApiUrl() {
-  if (process.env.EXPO_PUBLIC_API_URL) {
+  const configured = pickConfiguredUrl().trim();
+  const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
+
+  // Production / release builds must never use a local/LAN API URL, even if
+  // .env leaked into an OTA bundle during `eas update`.
+  if (!isDev) {
+    if (configured) {
+      try {
+        const host = new URL(configured).hostname;
+        if (!isLocalApiHost(host)) {
+          return {
+            apiUrl: configured.replace(/\/$/, ''),
+            source: 'release env (prod API)',
+          };
+        }
+      } catch {
+        // fall through to production default
+      }
+    }
+    return { apiUrl: PROD_API_URL, source: 'production default (blocked local URL)' };
+  }
+
+  // Dev: prefer .env / extra, rewrite localhost → Metro LAN IP
+  if (configured) {
     return {
-      apiUrl: rewriteLocalhostForDevice(process.env.EXPO_PUBLIC_API_URL),
-      source: 'process.env.EXPO_PUBLIC_API_URL',
+      apiUrl: rewriteLocalhostForDevice(configured),
+      source: process.env.EXPO_PUBLIC_API_URL
+        ? 'process.env.EXPO_PUBLIC_API_URL'
+        : 'app.json extra',
     };
   }
-  if (extra.EXPO_PUBLIC_API_URL) {
-    return {
-      apiUrl: rewriteLocalhostForDevice(extra.EXPO_PUBLIC_API_URL),
-      source: 'app.json extra.EXPO_PUBLIC_API_URL',
-    };
-  }
-  if (extra.API_URL) {
-    return {
-      apiUrl: rewriteLocalhostForDevice(extra.API_URL),
-      source: 'app.json extra.API_URL',
-    };
-  }
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    return {
-      apiUrl: rewriteLocalhostForDevice(LOCAL_API_URL),
-      source: '__DEV__ default (local)',
-    };
-  }
-  return { apiUrl: PROD_API_URL, source: 'production default' };
+
+  return {
+    apiUrl: rewriteLocalhostForDevice(LOCAL_API_URL),
+    source: '__DEV__ default (local)',
+  };
 }
 
 /** Config available in dev (.env) and EAS builds (eas.json env / app.json extra). */
@@ -90,12 +119,19 @@ export function getAppConfig() {
 
   if (!didLogApiEnv) {
     didLogApiEnv = true;
-    const envLabel =
-      apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1') || /\b192\.168\.|\b10\.|\b172\.(1[6-9]|2\d|3[0-1])\./.test(apiUrl)
-        ? 'local'
-        : apiUrl.includes('api.findindian.de')
-          ? 'production'
-          : 'custom';
+    const envLabel = isLocalApiHost(
+      (() => {
+        try {
+          return new URL(apiUrl).hostname;
+        } catch {
+          return '';
+        }
+      })()
+    )
+      ? 'local'
+      : apiUrl.includes('api.findindian.de')
+        ? 'production'
+        : 'custom';
     console.log(
       `[config] API env=${envLabel} url=${apiUrl} source=${source} __DEV__=${Boolean(__DEV__)} expoHost=${getExpoDevHost() || 'n/a'}`
     );

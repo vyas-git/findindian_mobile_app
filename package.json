@@ -49,8 +49,8 @@
     "web": "npm run prepare-env && expo start --web",
     "build:prod:android": "npx eas-cli build --profile production --platform android",
     "build:prod:android:ci": "npx eas-cli build --profile production --platform android --non-interactive",
-    "update:preview": "npx eas-cli update --channel preview --message",
-    "update:production": "npx eas-cli update --channel production --message",
+    "update:preview": "EXPO_PUBLIC_API_URL=https://api.findindian.de npx eas-cli update --channel preview --message",
+    "update:production": "EXPO_PUBLIC_API_URL=https://api.findindian.de npx eas-cli update --channel production --message",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "screenshots:playstore": "node scripts/generate-playstore.mjs"
   },
