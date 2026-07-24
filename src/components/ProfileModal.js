@@ -10,9 +10,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useApi } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
+import GermanyCityModal from './GermanyCityModal';
 
 export default function ProfileModal({ visible, onClose, onUpdated, onDeleteAccount }) {
   const { refreshProfile, signOut } = React.useContext(AuthContext);
@@ -21,9 +23,13 @@ export default function ProfileModal({ visible, onClose, onUpdated, onDeleteAcco
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [profile, setProfile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [cityPickerOpen, setCityPickerOpen] = useState(false);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      setCityPickerOpen(false);
+      return;
+    }
     apiRequest('/api/users/me')
       .then(setProfile)
       .catch(console.warn);
@@ -63,54 +69,79 @@ export default function ProfileModal({ visible, onClose, onUpdated, onDeleteAcco
   }
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={profile.name || ''}
-          onChangeText={(v) => setProfile({ ...profile, name: v })}
-          placeholderTextColor={colors.textSecondary}
-        />
-        <Text style={styles.label}>City in Germany</Text>
-        <TextInput
-          style={styles.input}
-          value={profile.germany_city || ''}
-          onChangeText={(v) => setProfile({ ...profile, germany_city: v })}
-          placeholderTextColor={colors.textSecondary}
-        />
-        <Text style={styles.label}>Instagram</Text>
-        <TextInput
-          style={styles.input}
-          value={profile.instagram_handle || ''}
-          onChangeText={(v) => setProfile({ ...profile, instagram_handle: v })}
-          placeholderTextColor={colors.textSecondary}
-        />
-        <Text style={styles.label}>LinkedIn URL</Text>
-        <TextInput
-          style={styles.input}
-          value={profile.linkedin_url || ''}
-          onChangeText={(v) => setProfile({ ...profile, linkedin_url: v })}
-          placeholderTextColor={colors.textSecondary}
-        />
-        <TouchableOpacity style={styles.saveBtn} onPress={save} disabled={saving}>
-          <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.deleteBtn}
-          onPress={() => {
-            onClose?.();
-            onDeleteAccount?.();
-          }}
-        >
-          <Text style={styles.deleteBtnText}>Delete Account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </Modal>
+    <>
+      <Modal visible={visible && !cityPickerOpen} animationType="slide" presentationStyle="pageSheet">
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.label}>Name</Text>
+          <TextInput
+            style={styles.input}
+            value={profile.name || ''}
+            onChangeText={(v) => setProfile({ ...profile, name: v })}
+            placeholderTextColor={colors.textSecondary}
+          />
+
+          <Text style={styles.label}>City/Place in Germany 🇩🇪</Text>
+          <TouchableOpacity
+            style={styles.selectField}
+            onPress={() => setCityPickerOpen(true)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.selectFieldText,
+                !profile.germany_city && styles.selectFieldPlaceholder,
+              ]}
+              numberOfLines={1}
+            >
+              {profile.germany_city || 'Select from list…'}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <Text style={styles.label}>Instagram</Text>
+          <TextInput
+            style={styles.input}
+            value={profile.instagram_handle || ''}
+            onChangeText={(v) => setProfile({ ...profile, instagram_handle: v })}
+            placeholderTextColor={colors.textSecondary}
+          />
+          <Text style={styles.label}>LinkedIn URL</Text>
+          <TextInput
+            style={styles.input}
+            value={profile.linkedin_url || ''}
+            onChangeText={(v) => setProfile({ ...profile, linkedin_url: v })}
+            placeholderTextColor={colors.textSecondary}
+          />
+          <TouchableOpacity style={styles.saveBtn} onPress={save} disabled={saving}>
+            <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={() => {
+              onClose?.();
+              onDeleteAccount?.();
+            }}
+          >
+            <Text style={styles.deleteBtnText}>Delete Account</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </Modal>
+
+      <GermanyCityModal
+        visible={visible && cityPickerOpen}
+        allowDismiss
+        selectedCity={profile.germany_city || ''}
+        onClose={() => setCityPickerOpen(false)}
+        onSelect={(city) => {
+          setProfile({ ...profile, germany_city: city });
+          setCityPickerOpen(false);
+        }}
+      />
+    </>
   );
 }
 
@@ -129,6 +160,20 @@ function createStyles(colors) {
       backgroundColor: colors.inputBg,
       color: colors.textPrimary,
     },
+    selectField: {
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      backgroundColor: colors.inputBg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    selectFieldText: { flex: 1, fontSize: 16, color: colors.textPrimary },
+    selectFieldPlaceholder: { color: colors.textSecondary },
     saveBtn: {
       backgroundColor: colors.primary,
       padding: 14,

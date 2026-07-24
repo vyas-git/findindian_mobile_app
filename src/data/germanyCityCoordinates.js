@@ -1,5 +1,8 @@
-// City name -> [lat, lng] for German cities (subset from web frontend)
+// City name -> [lat, lng] for German cities
+// Used to position markers on the Members map
+// Districts map to parent city coordinates
 export const CITY_COORDINATES = {
+  // Major cities
   Berlin: [52.52, 13.405],
   Munich: [48.1351, 11.582],
   München: [48.1351, 11.582],
@@ -15,35 +18,251 @@ export const CITY_COORDINATES = {
   Dresden: [51.0504, 13.7373],
   Hannover: [52.3759, 9.732],
   Nuremberg: [49.4521, 11.0767],
+  Duisburg: [51.4344, 6.7623],
+  Bochum: [51.4818, 7.2162],
+  Wuppertal: [51.2562, 7.1508],
+  Bielefeld: [52.0202, 8.5311],
   Bonn: [50.7374, 7.0982],
+  Münster: [51.9607, 7.6261],
   Karlsruhe: [49.0069, 8.4037],
   Mannheim: [49.4875, 8.4662],
   Augsburg: [48.3715, 10.8985],
-  Heidelberg: [49.3988, 8.6724],
-  Freiburg: [47.999, 7.8421],
-  Mainz: [49.9929, 8.2473],
-  Aachen: [50.7753, 6.0839],
+  Wiesbaden: [50.0825, 8.24],
+  Gelsenkirchen: [51.5177, 7.0858],
+  Mönchengladbach: [51.1954, 6.4417],
+  Braunschweig: [52.2689, 10.5268],
+  Chemnitz: [50.8329, 12.9212],
   Kiel: [54.3233, 10.1228],
+  Aachen: [50.7753, 6.0839],
+  Halle: [51.496, 11.9682],
+  Magdeburg: [52.1205, 11.6276],
+  Freiburg: [47.999, 7.8421],
+  Krefeld: [51.3388, 6.5853],
+  Lübeck: [53.8655, 10.6866],
+  Oberhausen: [51.496, 6.8519],
+  Erfurt: [50.9848, 11.0299],
+  Mainz: [49.9929, 8.2473],
+  Rostock: [54.0924, 12.0991],
+  Kassel: [51.3168, 9.4915],
+  Hagen: [51.3671, 7.4632],
+  Hamm: [51.6739, 7.815],
+  Saarbrücken: [49.2354, 7.0],
+  Mülheim: [51.4272, 6.8826],
   Potsdam: [52.3906, 13.0645],
-};
+  Ludwigshafen: [49.4812, 8.4463],
+  Oldenburg: [53.1435, 8.2146],
+  Leverkusen: [51.0459, 6.9853],
+  Osnabrück: [52.2789, 8.0472],
+  Solingen: [51.1652, 7.0845],
+  Heidelberg: [49.3988, 8.6724],
+  Herne: [51.5386, 7.2257],
+  Neuss: [51.2042, 6.6879],
+  Darmstadt: [49.8728, 8.6562],
+  Paderborn: [51.7189, 8.7575],
+  Regensburg: [49.0134, 12.1016],
+  Ingolstadt: [48.7651, 11.4237],
+  Würzburg: [49.7945, 9.9299],
+  Fürth: [49.4771, 10.9897],
+  Wolfsburg: [52.4226, 10.7865],
+  Offenbach: [50.0956, 8.7761],
+  Ulm: [48.4011, 9.9876],
+  Heilbronn: [49.1423, 9.2109],
+  Pforzheim: [48.8922, 8.6949],
+  Göttingen: [51.5413, 9.9158],
+  Bottrop: [51.5232, 6.9283],
+  Trier: [49.7596, 6.6440],
+  Recklinghausen: [51.6138, 7.1974],
+  Reutlingen: [48.4914, 9.2115],
+  Bremerhaven: [53.5396, 8.5809],
+  Koblenz: [50.3569, 7.5890],
+  'Bergisch Gladbach': [50.9856, 7.1370],
+  Jena: [50.9272, 11.5892],
+  Remscheid: [51.1790, 7.1894],
+  Erlangen: [49.5897, 11.0080],
+  Moers: [51.4514, 6.6264],
+  Siegen: [50.8748, 8.0243],
+  Hildesheim: [52.1508, 9.9518],
+  Salzgitter: [52.1572, 10.3394],
+  Cottbus: [51.7563, 14.3329],
+  Fulda: [50.5558, 9.6808],
+  Gießen: [50.5871, 8.6759],
+  Marburg: [50.8070, 8.7708],
+  Tübingen: [48.5216, 9.0576],
+  Konstanz: [47.6633, 9.1752],
+  Passau: [48.5665, 13.4312],
+  Bamberg: [49.8988, 10.9027],
+  Bayreuth: [49.9480, 11.5783],
+  Aschaffenburg: [49.9730, 9.1521],
+  Landshut: [48.5374, 12.1512],
+  Rosenheim: [47.8564, 12.1286],
+  Straubing: [48.8813, 12.5739],
+  Schweinfurt: [50.0494, 10.2318],
+  Kempten: [47.7280, 10.3154],
+  Weiden: [49.6771, 12.1561],
+  Hof: [50.3190, 11.9172],
+  Coburg: [50.2594, 10.9638],
+  Memmingen: [47.9837, 10.1807],
+  'Schwäbisch Hall': [49.1128, 9.7399],
+  'Baden-Baden': [48.7606, 8.2397],
+  'Frankfurt an der Oder': [52.3431, 14.5530],
+  Greifswald: [54.0924, 13.3816],
+  Flensburg: [54.7836, 9.4396],
+  Vechta: [52.7264, 8.2860],
+  Eichstätt: [48.8915, 11.1837],
+  Weimar: [50.9795, 11.3235],
+  Clausthal: [51.8028, 10.3392],
+  Ilmenau: [50.6833, 10.9167],
+  Zittau: [50.8961, 14.8078],
+  Wildau: [52.3244, 13.6333],
+  'Brandenburg an der Havel': [52.4125, 12.5316],
+  Eberswalde: [52.8341, 13.8195],
+  Neubrandenburg: [53.5575, 13.2611],
+  Stralsund: [54.3093, 13.0818],
+  Wismar: [53.8931, 11.4528],
+  Schwerin: [53.6355, 11.4012],
+  Lüneburg: [53.2515, 10.4144],
+  Wolfenbüttel: [52.1621, 10.5370],
+  Esslingen: [48.7406, 9.3068],
+  Offenburg: [48.4738, 7.9410],
+  Bruchsal: [49.1243, 8.5830],
+  Hanau: [50.1348, 8.9143],
+  Freising: [48.4035, 11.7488],
+  Weihenstephan: [48.3958, 11.7211],
+  Ludwigsburg: [48.8974, 9.1916],
+  Göppingen: [48.7025, 9.6528],
+  Crailsheim: [49.1344, 10.0719],
+  Aalen: [48.8378, 10.0933],
+  Biberach: [48.0935, 9.7902],
+  Ravensburg: [47.7819, 9.6146],
+  Friedrichshafen: [47.6549, 9.4789],
+  Singen: [47.7594, 8.8403],
+  'Villingen-Schwenningen': [48.0623, 8.4586],
+  Lörrach: [47.6160, 7.6614],
+  Worms: [49.6341, 8.3577],
+  Dessau: [51.8316, 12.2456],
+  Gera: [50.8772, 12.0822],
+  Zwickau: [50.7182, 12.4939],
+  Plauen: [50.4953, 12.1373],
+  Bautzen: [51.1804, 14.4349],
+  Görlitz: [51.1526, 14.9878],
+  Amberg: [49.4447, 11.8622],
+  Deggendorf: [48.8408, 12.9609],
+  Traunstein: [47.8683, 12.6433],
+  Berchtesgaden: [47.6308, 13.0042],
+  'Garmisch-Partenkirchen': [47.4981, 11.0958],
+  Landsberg: [48.0530, 10.8790],
+  Starnberg: [47.9979, 11.3402],
+  Weilheim: [47.8414, 11.1547],
+  Murnau: [47.6808, 11.2019],
+  'Bad Kissingen': [50.2000, 10.0833],
+}
 
+// Normalize district names to parent city for coordinate lookup
+const DISTRICT_TO_CITY = {
+  'Berlin Mitte': 'Berlin',
+  'Berlin Prenzlauer Berg': 'Berlin',
+  'Berlin Kreuzberg': 'Berlin',
+  'Berlin Friedrichshain': 'Berlin',
+  'Berlin Charlottenburg': 'Berlin',
+  'Berlin Wilmersdorf': 'Berlin',
+  'Berlin Schöneberg': 'Berlin',
+  'Berlin Neukölln': 'Berlin',
+  'Berlin Tempelhof': 'Berlin',
+  'Berlin Steglitz': 'Berlin',
+  'Berlin Zehlendorf': 'Berlin',
+  'Berlin Spandau': 'Berlin',
+  'Berlin Pankow': 'Berlin',
+  'Berlin Reinickendorf': 'Berlin',
+  'Berlin Lichtenberg': 'Berlin',
+  'Berlin Marzahn': 'Berlin',
+  'Berlin Hellersdorf': 'Berlin',
+  'Berlin Treptow-Köpenick': 'Berlin',
+  'Munich Altstadt': 'Munich',
+  'Munich Schwabing': 'Munich',
+  'Munich Maxvorstadt': 'Munich',
+  'Munich Neuhausen': 'Munich',
+  'Munich Nymphenburg': 'Munich',
+  'Munich Bogenhausen': 'Munich',
+  'Munich Haidhausen': 'Munich',
+  'Munich Sendling': 'Munich',
+  'Munich Pasing': 'Munich',
+  'Munich Freimann': 'Munich',
+  'Munich Trudering': 'Munich',
+  'Hamburg Altstadt': 'Hamburg',
+  'Hamburg St. Pauli': 'Hamburg',
+  'Hamburg Altona': 'Hamburg',
+  'Hamburg Eimsbüttel': 'Hamburg',
+  'Hamburg Barmbek': 'Hamburg',
+  'Hamburg Winterhude': 'Hamburg',
+  'Hamburg Eppendorf': 'Hamburg',
+  'Hamburg Wandsbek': 'Hamburg',
+  'Hamburg Rahlstedt': 'Hamburg',
+  'Hamburg Blankenese': 'Hamburg',
+  'Cologne Altstadt': 'Cologne',
+  'Cologne Neustadt': 'Cologne',
+  'Cologne Deutz': 'Cologne',
+  'Cologne Lindenthal': 'Cologne',
+  'Cologne Sülz': 'Cologne',
+  'Cologne Ehrenfeld': 'Cologne',
+  'Cologne Nippes': 'Cologne',
+  'Cologne Chorweiler': 'Cologne',
+  'Frankfurt Altstadt': 'Frankfurt',
+  'Frankfurt Innenstadt': 'Frankfurt',
+  'Frankfurt Westend': 'Frankfurt',
+  'Frankfurt Nordend': 'Frankfurt',
+  'Frankfurt Ostend': 'Frankfurt',
+  'Frankfurt Bornheim': 'Frankfurt',
+  'Frankfurt Sachsenhausen': 'Frankfurt',
+  'Stuttgart Mitte': 'Stuttgart',
+  'Stuttgart Nord': 'Stuttgart',
+  'Stuttgart Ost': 'Stuttgart',
+  'Stuttgart Süd': 'Stuttgart',
+  'Stuttgart West': 'Stuttgart',
+  'Stuttgart Bad Cannstatt': 'Stuttgart',
+  'Stuttgart Vaihingen': 'Stuttgart',
+  'Düsseldorf Altstadt': 'Düsseldorf',
+  'Düsseldorf Stadtmitte': 'Düsseldorf',
+  'Düsseldorf Bilk': 'Düsseldorf',
+  'Düsseldorf Oberkassel': 'Düsseldorf',
+  'Düsseldorf Gerresheim': 'Düsseldorf',
+}
+
+/**
+ * Get [lat, lng] for a city name. Handles districts by mapping to parent city.
+ * Returns null if city is unknown.
+ */
 export function getCityCoordinates(cityName) {
-  if (!cityName) return null;
-  const trimmed = cityName.trim();
-  if (CITY_COORDINATES[trimmed]) return CITY_COORDINATES[trimmed];
-  const match = Object.keys(CITY_COORDINATES).find(
-    (key) => key.toLowerCase() === trimmed.toLowerCase()
-  );
-  return match ? CITY_COORDINATES[match] : null;
+  if (!cityName || typeof cityName !== 'string') return null
+  const trimmed = cityName.trim()
+  if (!trimmed) return null
+
+  // Direct lookup
+  if (CITY_COORDINATES[trimmed]) {
+    return CITY_COORDINATES[trimmed]
+  }
+
+  // District -> parent city
+  const parentCity = DISTRICT_TO_CITY[trimmed]
+  if (parentCity && CITY_COORDINATES[parentCity]) {
+    return CITY_COORDINATES[parentCity]
+  }
+
+  // Try case-insensitive match for common variants (e.g. München vs Munich)
+  const lower = trimmed.toLowerCase()
+  for (const [name, coords] of Object.entries(CITY_COORDINATES)) {
+    if (name.toLowerCase() === lower) return coords
+  }
+
+  return null
 }
 
 export function groupMembersByCity(members) {
-  const groups = {};
+  const groups = {}
   members.forEach((member) => {
-    const city = member.germany_city?.trim();
-    if (!city) return;
-    if (!groups[city]) groups[city] = [];
-    groups[city].push(member);
-  });
-  return groups;
+    const city = member.germany_city?.trim()
+    if (!city) return
+    if (!groups[city]) groups[city] = []
+    groups[city].push(member)
+  })
+  return groups
 }
