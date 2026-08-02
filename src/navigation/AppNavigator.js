@@ -10,6 +10,7 @@ import { useTheme } from '../context/ThemeContext';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import LoginScreen from '../screens/LoginScreen';
 import MembersScreen from '../screens/MembersScreen';
+import LeaderboardScreen from '../screens/LeaderboardScreen';
 import PostsScreen from '../screens/PostsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import JobsScreen from '../screens/JobsScreen';
@@ -24,9 +25,22 @@ import ProfileModal from '../components/ProfileModal';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import GermanyCityModal from '../components/GermanyCityModal';
 import { DarkTheme, DefaultTheme, NavigationContainer, useNavigationState } from '@react-navigation/native';
+import { apiRequestWithSession } from '../lib/api';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const ROUTE_TO_PATH = {
+  Members: '/members',
+  Leaderboard: '/leaderboard',
+  Posts: '/posts',
+  Channel: '/chat',
+  Jobs: '/jobs',
+  Messages: '/messages',
+  CreatePost: '/posts/create',
+  PostView: '/posts/:id',
+  EmailAllMembers: '/send-email-members',
+};
 
 const linking = {
   prefixes: ['findindianmobile://', 'exp://'],
@@ -35,6 +49,7 @@ const linking = {
       Main: {
         screens: {
           Members: 'members',
+          Leaderboard: 'leaderboard',
           Posts: 'posts',
           Channel: {
             path: 'chat',
@@ -54,6 +69,7 @@ function getTabState(rootState) {
 }
 
 const TAB_HEADER_TITLES = {
+  Leaderboard: 'Top members in community',
   Posts: 'Community Posts',
   Channel: 'Channel',
   Jobs: 'Jobs',
@@ -87,10 +103,30 @@ function MainTabsContent({ navigation }) {
     userProfile &&
     (!userProfile.germany_city || String(userProfile.germany_city).trim() === '');
 
+  const sentViewsRef = useRef(new Set());
+  useEffect(() => {
+    const path = ROUTE_TO_PATH[activeRoute];
+    if (!path || !user?.id) return;
+    const key = `mobile:${path}`;
+    if (sentViewsRef.current.has(key)) return;
+    sentViewsRef.current.add(key);
+    apiRequestWithSession('/api/analytics/view', {
+      method: 'POST',
+      body: JSON.stringify({ path, source: 'mobile' }),
+    }).catch(() => {
+      sentViewsRef.current.delete(key);
+    });
+  }, [activeRoute, user?.id]);
+
   const handleDrawerNavigate = useCallback(
     (routeName, params) => {
       setSearchQuery('');
-      navigation.navigate(routeName, params);
+      setDrawerOpen(false);
+      // Tab screens are nested under Stack "Main" — navigate with screen param
+      navigation.navigate('Main', {
+        screen: routeName,
+        params: params || {},
+      });
     },
     [navigation, setSearchQuery]
   );
@@ -141,6 +177,7 @@ function MainTabsContent({ navigation }) {
           tabBarIcon: ({ color, size }) => {
             const icons = {
               Members: 'people',
+              Leaderboard: 'trophy',
               Posts: 'newspaper',
               Channel: 'chatbubbles',
               Jobs: 'briefcase',
@@ -153,6 +190,7 @@ function MainTabsContent({ navigation }) {
         }}
       >
         <Tab.Screen name="Members" component={MembersScreen} options={{ title: 'Members' }} />
+        <Tab.Screen name="Leaderboard" component={LeaderboardScreen} options={{ title: 'Board' }} />
         <Tab.Screen name="Posts" component={PostsScreen} options={{ title: 'Posts' }} />
         <Tab.Screen
           name="Channel"
@@ -180,7 +218,10 @@ function MainTabsContent({ navigation }) {
           setDrawerOpen(false);
           setShowProfile(true);
         }}
-        onEmailAll={() => navigation.navigate('EmailAllMembers')}
+        onEmailAll={() => {
+          setDrawerOpen(false);
+          navigation.navigate('EmailAllMembers');
+        }}
       />
 
       <ProfileModal

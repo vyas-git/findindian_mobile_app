@@ -126,6 +126,10 @@ export default function ChatScreen({ route, navigation }) {
       navigation.navigate('Members');
       return;
     }
+    if (returnTo === 'Leaderboard') {
+      navigation.navigate('Leaderboard');
+      return;
+    }
     navigation.navigate('Members');
   }, [navigation, route.params?.returnTo]);
 
