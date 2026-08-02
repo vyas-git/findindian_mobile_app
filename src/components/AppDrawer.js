@@ -97,8 +97,11 @@ export default function AppDrawer({
   }, [visible, memberCount, apiRequest]);
 
   const handleNav = (route, params) => {
-    onNavigate?.(route, params);
     onClose?.();
+    // Defer navigate so Modal can close first (avoids touch/nav race)
+    requestAnimationFrame(() => {
+      onNavigate?.(route, params);
+    });
   };
 
   return (
@@ -169,6 +172,12 @@ export default function AppDrawer({
               label={loadedCount ? `Members (${loadedCount}+)` : 'Members'}
               active={activeRoute === 'Members'}
               onPress={() => handleNav('Members')}
+              styles={styles}
+            />
+            <DrawerLink
+              label="Leaderboard"
+              active={activeRoute === 'Leaderboard'}
+              onPress={() => handleNav('Leaderboard')}
               styles={styles}
             />
             <DrawerLink label="Posts" active={activeRoute === 'Posts'} onPress={() => handleNav('Posts')} styles={styles} />
