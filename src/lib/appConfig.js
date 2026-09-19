@@ -16,7 +16,7 @@ function isLocalApiHost(hostname) {
   return false;
 }
 
-/** Metro / Expo Go host (your machine LAN IP when the app runs on a phone). */
+/** Metro / Expo Go host (LAN IP for device dev). Tunnel (*.exp.direct) is Metro-only — skip for API. */
 function getExpoDevHost() {
   const candidates = [
     Constants.expoConfig?.hostUri,
@@ -28,9 +28,9 @@ function getExpoDevHost() {
   for (const candidate of candidates) {
     const hostPort = String(candidate).split('/')[0];
     const host = hostPort.split(':')[0];
-    if (host && host !== 'localhost' && host !== '127.0.0.1') {
-      return host;
-    }
+    if (!host || host === 'localhost' || host === '127.0.0.1') continue;
+    if (host.includes('.exp.direct')) continue;
+    return host;
   }
   return null;
 }
@@ -86,7 +86,7 @@ function resolveApiUrl() {
     return { apiUrl: PROD_API_URL, source: 'production default (blocked local URL)' };
   }
 
-  // Dev: prefer .env / extra, rewrite localhost → Metro LAN IP
+  // Dev: prefer .env / extra, rewrite localhost → Metro LAN IP (LAN only, not tunnel host)
   if (configured) {
     return {
       apiUrl: rewriteLocalhostForDevice(configured),

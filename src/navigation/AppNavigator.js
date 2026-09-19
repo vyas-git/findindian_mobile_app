@@ -13,7 +13,9 @@ import MembersScreen from '../screens/MembersScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import PostsScreen from '../screens/PostsScreen';
 import ChatScreen from '../screens/ChatScreen';
-import JobsScreen from '../screens/JobsScreen';
+import TravelListPage from '../pages/TravelListPage';
+import CreateTravelPage from '../pages/CreateTravelPage';
+import TravelEventPage from '../pages/TravelEventPage';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import PostViewScreen from '../screens/PostViewScreen';
 import EmailAllMembersScreen from '../screens/EmailAllMembersScreen';
@@ -22,7 +24,9 @@ import AppHeader from '../components/AppHeader';
 import SimpleScreenHeader from '../components/SimpleScreenHeader';
 import AppDrawer from '../components/AppDrawer';
 import ProfileModal from '../components/ProfileModal';
+import FlyersBackButton from '../components/FlyersBackButton';
 import ConversationsScreen from '../screens/ConversationsScreen';
+import JobsScreen from '../screens/JobsScreen';
 import GermanyCityModal from '../components/GermanyCityModal';
 import { DarkTheme, DefaultTheme, NavigationContainer, useNavigationState } from '@react-navigation/native';
 import { apiRequestWithSession } from '../lib/api';
@@ -35,11 +39,14 @@ const ROUTE_TO_PATH = {
   Leaderboard: '/leaderboard',
   Posts: '/posts',
   Channel: '/chat',
-  Jobs: '/jobs',
+  TravelList: '/flyers',
   Messages: '/messages',
   CreatePost: '/posts/create',
+  CreateTravelPage: '/flyers/create',
+  TravelEventPage: '/flyers/:slug',
   PostView: '/posts/:id',
   EmailAllMembers: '/send-email-members',
+  Jobs: '/jobs',
 };
 
 const linking = {
@@ -55,9 +62,11 @@ const linking = {
             path: 'chat',
             parse: { dmUserId: (id) => id },
           },
-          Jobs: 'jobs',
+          TravelList: 'flyers',
         },
       },
+      CreateTravelPage: 'flyers/create',
+      TravelEventPage: 'flyers/:slug',
       PostView: 'posts/:postId',
     },
   },
@@ -72,8 +81,18 @@ const TAB_HEADER_TITLES = {
   Leaderboard: 'Top members in community',
   Posts: 'Community Posts',
   Channel: 'Channel',
-  Jobs: 'Jobs',
+  TravelList: 'Flyers',
 };
+
+function flyersStackOptions(title) {
+  return ({ navigation }) => ({
+    title,
+    headerBackVisible: false,
+    headerLeft: () => (
+      <FlyersBackButton variant="header" onPress={() => navigation.goBack()} />
+    ),
+  });
+}
 
 function MainTabsContent({ navigation }) {
   const { user, userProfile, refreshProfile } = useContext(AuthContext);
@@ -84,6 +103,10 @@ function MainTabsContent({ navigation }) {
   const [showProfile, setShowProfile] = useState(false);
 
   const { activeRoute, channelDmUserId } = useNavigationState((state) => {
+    const stackRoute = state?.routes?.[state?.index];
+    if (stackRoute?.name === 'Jobs') {
+      return { activeRoute: 'Jobs', channelDmUserId: null };
+    }
     const tabState = getTabState(state);
     if (!tabState) return { activeRoute: 'Members', channelDmUserId: null };
     const route = tabState.routes[tabState.index];
@@ -122,6 +145,10 @@ function MainTabsContent({ navigation }) {
     (routeName, params) => {
       setSearchQuery('');
       setDrawerOpen(false);
+      if (routeName === 'Jobs') {
+        navigation.navigate('Jobs');
+        return;
+      }
       // Tab screens are nested under Stack "Main" — navigate with screen param
       navigation.navigate('Main', {
         screen: routeName,
@@ -180,7 +207,7 @@ function MainTabsContent({ navigation }) {
               Leaderboard: 'trophy',
               Posts: 'newspaper',
               Channel: 'chatbubbles',
-              Jobs: 'briefcase',
+              TravelList: 'airplane',
             };
             return <Ionicons name={icons[route.name] || 'ellipse'} size={size} color={color} />;
           },
@@ -203,9 +230,9 @@ function MainTabsContent({ navigation }) {
           })}
         />
         <Tab.Screen
-          name="Jobs"
-          component={JobsScreen}
-          options={{ title: 'Jobs' }}
+          name="TravelList"
+          component={TravelListPage}
+          options={{ title: 'Flyers' }}
         />
       </Tab.Navigator>
 
@@ -268,6 +295,8 @@ function AuthenticatedApp({ navigationRef }) {
           navigationRef.current.navigate('Main', { screen: 'Channel' });
         } else if (data.type === 'post' && data.postId) {
           navigationRef.current.navigate('PostView', { postId: data.postId });
+        } else if (data.type === 'flyer' && data.slug) {
+          navigationRef.current.navigate('TravelEventPage', { slug: data.slug });
         }
         return true;
       };
@@ -303,7 +332,18 @@ function AuthenticatedApp({ navigationRef }) {
           component={ConversationsScreen}
           options={{ title: 'Messaging', headerBackTitle: 'Back' }}
         />
+        <Stack.Screen name="Jobs" component={JobsScreen} options={{ title: 'Jobs', headerBackTitle: 'Back' }} />
         <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ title: 'Create Post' }} />
+        <Stack.Screen
+          name="CreateTravelPage"
+          component={CreateTravelPage}
+          options={flyersStackOptions('Add your flight')}
+        />
+        <Stack.Screen
+          name="TravelEventPage"
+          component={TravelEventPage}
+          options={flyersStackOptions('Flyers')}
+        />
         <Stack.Screen name="PostView" component={PostViewScreen} options={{ title: 'Post' }} />
         <Stack.Screen name="EmailAllMembers" component={EmailAllMembersScreen} options={{ title: 'Email Members' }} />
         <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: 'Delete Account' }} />

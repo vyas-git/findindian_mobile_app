@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApi } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthProvider';
@@ -74,6 +74,7 @@ export default function ChatScreen({ route, navigation }) {
   const { setHeader } = useAppShell();
   const { apiRequest } = useApi();
   const { colors } = useTheme();
+  const isFocused = useIsFocused();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [mode, setMode] = useState('channel');
   const [channel, setChannel] = useState(null);
@@ -103,17 +104,26 @@ export default function ChatScreen({ route, navigation }) {
 
   const handleBackFromDM = useCallback(() => {
     const returnTo = route.params?.returnTo;
-    setMode('channel');
-    setDmUserId(null);
+
+    // Returning to Channel: exit DM mode in place (same tab).
+    if (returnTo === 'Channel') {
+      setMode('channel');
+      setDmUserId(null);
+      navigation.setParams({
+        dmUserId: undefined,
+        dmUserName: undefined,
+        returnTo: undefined,
+      });
+      return;
+    }
+
+    // Leaving to another tab — navigate first so we don't briefly set #channel header.
     navigation.setParams({
       dmUserId: undefined,
       dmUserName: undefined,
       returnTo: undefined,
     });
 
-    if (returnTo === 'Channel') {
-      return;
-    }
     if (returnTo === 'Messages') {
       navigation.getParent()?.navigate('Messages');
       return;
@@ -128,6 +138,10 @@ export default function ChatScreen({ route, navigation }) {
     }
     if (returnTo === 'Leaderboard') {
       navigation.navigate('Leaderboard');
+      return;
+    }
+    if (returnTo === 'TravelList') {
+      navigation.getParent()?.navigate('Main', { screen: 'TravelList' });
       return;
     }
     navigation.navigate('Members');
@@ -162,11 +176,10 @@ export default function ChatScreen({ route, navigation }) {
   );
 
   useEffect(() => {
-    if (!inDM && channel?.name) {
-      const label = channel.name.startsWith('#') ? channel.name : `#${channel.name}`;
-      setHeader({ variant: 'title', title: label });
-    }
-  }, [inDM, channel?.name, setHeader]);
+    if (!isFocused || inDM || !channel?.name) return;
+    const label = channel.name.startsWith('#') ? channel.name : `#${channel.name}`;
+    setHeader({ variant: 'title', title: label });
+  }, [isFocused, inDM, channel?.name, setHeader]);
 
   const scrollToBottom = useCallback((animated = true) => {
     const list = listRef.current;

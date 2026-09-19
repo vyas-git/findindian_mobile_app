@@ -6,12 +6,13 @@ import { getCityCoordinates, groupMembersByCity } from '../data/germanyCityCoord
 
 function buildMapHtml(isDark, accentColor) {
   const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const textColor = isDark ? '#f5f5f5' : '#111b21';
-  const mapBg = isDark ? '#1a1a1a' : '#f5f6f6';
-  const selectedBg = isDark ? 'rgba(129, 140, 248, 0.28)' : 'rgba(102, 126, 234, 0.2)';
-  const selectedShadow = isDark ? 'rgba(129, 140, 248, 0.45)' : 'rgba(102, 126, 234, 0.4)';
+  const textColor = isDark ? '#1a1a1a' : '#111b21';
+  const mapBg = isDark ? '#dbeafe' : '#f5f6f6';
+  const selectedBg = isDark ? 'rgba(37, 99, 235, 0.22)' : 'rgba(102, 126, 234, 0.2)';
+  const selectedShadow = isDark ? 'rgba(37, 99, 235, 0.4)' : 'rgba(102, 126, 234, 0.4)';
+  const hoverBg = isDark ? 'rgba(255, 255, 255, 0.88)' : 'rgba(255, 255, 255, 0.9)';
 
   return `<!DOCTYPE html>
 <html>
@@ -32,11 +33,12 @@ function buildMapHtml(isDark, accentColor) {
       padding: 2px 4px;
       border-radius: 6px;
     }
+    .leaflet-city-marker:hover { background: ${hoverBg}; }
     .leaflet-city-marker.selected {
       background: ${selectedBg};
       box-shadow: 0 2px 8px ${selectedShadow};
     }
-    .leaflet-city-name { font-size: 15px; font-weight: 600; color: ${textColor}; font-family: sans-serif; }
+    .leaflet-city-name { font-size: 15px; font-weight: 600; color: ${textColor}; font-family: sans-serif; text-shadow: 0 0 3px rgba(255,255,255,0.85); }
     .leaflet-city-badge {
       font-size: 10px; font-weight: 700; color: #fff; background: ${accentColor};
       padding: 2px 6px; border-radius: 10px;

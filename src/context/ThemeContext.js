@@ -5,15 +5,15 @@ import { darkColors, lightColors } from '../theme/themes';
 const STORAGE_KEY = '@findindian_theme';
 
 export const ThemeContext = createContext({
-  theme: 'light',
-  isDark: false,
-  colors: lightColors,
+  theme: 'dark',
+  isDark: true,
+  colors: darkColors,
   setTheme: () => {},
   toggleTheme: () => {},
 });
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState('light');
+  const [theme, setThemeState] = useState('dark');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

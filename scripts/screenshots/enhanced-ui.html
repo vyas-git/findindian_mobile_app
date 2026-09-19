@@ -2,307 +2,430 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Enhanced Screens</title>
+  <title>findIndian.de — device-accurate mockups</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; background: #111; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; background: #000; }
     .phone {
       width: 390px; height: 844px; overflow: hidden;
       position: fixed; left: 0; top: 0; display: none; flex-direction: column;
-      background: #f0f2f5;
+      background: #0b0f14; color: #f5f5f5;
     }
     .phone.active { display: flex; }
-    .phone.dark { background: #121212; color: #f5f5f5; }
-    .status { height: 36px; background: inherit; flex-shrink: 0; }
-    .header {
+    .status { height: 44px; flex-shrink: 0; }
+    .app-header {
       display: flex; align-items: center; gap: 10px;
-      padding: 8px 12px 10px; background: #fff; border-bottom: 1px solid #e4e6eb;
+      padding: 6px 12px 10px; background: #0b0f14;
     }
-    .phone.dark .header { background: #1a1a1a; border-color: #333; }
-    .header.simple .title { flex: 1; text-align: center; font-weight: 700; font-size: 17px; }
-    .phone.dark .header.simple .title { color: #f5f5f5; }
-    .av { border-radius: 50%; object-fit: cover; background: #eef3f8; }
-    .av-36 { width: 36px; height: 36px; }
-    .av-40 { width: 40px; height: 40px; }
-    .av-48 { width: 48px; height: 48px; }
-    .av-64 { width: 64px; height: 64px; }
+    .app-header img.av { width: 36px; height: 36px; border-radius: 18px; object-fit: cover; }
     .search {
-      flex: 1; display: flex; align-items: center; gap: 6px;
-      background: #eef3f8; border-radius: 8px; padding: 0 10px; height: 40px;
-      color: #666; font-size: 14px;
+      flex: 1; height: 40px; border-radius: 8px; background: #1a2332;
+      display: flex; align-items: center; padding: 0 12px; color: #8b9cb3; font-size: 14px;
     }
-    .phone.dark .search { background: #2a2a2a; color: #aaa; }
-    .icon-btn { width: 36px; text-align: center; font-size: 20px; position: relative; }
-    .badge9 { position: absolute; top: -4px; right: 0; background: #cc1016; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 8px; }
-    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .msg-btn { position: relative; font-size: 22px; width: 36px; text-align: center; }
+    .badge9 {
+      position: absolute; top: -4px; right: -2px; background: #e53935; color: #fff;
+      font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 8px;
+    }
+    .simple-header {
+      display: flex; align-items: center; justify-content: center;
+      padding: 8px 48px 12px; background: #0b0f14; position: relative;
+    }
+    .simple-header h1 { font-size: 17px; font-weight: 700; }
+    .simple-header .av-left {
+      position: absolute; left: 12px; width: 36px; height: 36px; border-radius: 18px;
+    }
+    .simple-header .msg-btn { position: absolute; right: 12px; }
+    .content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     .tabs {
-      display: flex; justify-content: space-around; height: 56px;
-      background: #fff; border-top: 1px solid #e4e6eb; font-size: 11px; font-weight: 600; color: #666; flex-shrink: 0;
+      height: 56px; flex-shrink: 0; display: flex; justify-content: space-around;
+      background: #0b0f14; border-top: 1px solid #1e293b; padding-top: 4px;
+      font-size: 10px; font-weight: 600; color: #64748b;
     }
-    .phone.dark .tabs { background: #1a1a1a; border-color: #333; color: #888; }
-    .tabs .active { color: #1a1a1a; }
-    .phone.dark .tabs .active { color: #f5f5f5; }
-    .tab { text-align: center; padding-top: 6px; }
+    .tabs .on { color: #f8fafc; }
+    .tab { text-align: center; }
     .tab span { display: block; font-size: 18px; margin-bottom: 2px; }
 
     /* Members */
-    .map { height: 260px; background: linear-gradient(160deg, #a8c5e8 0%, #8fb8d9 50%, #c5d9a8 100%); position: relative; }
-    .map-label { position: absolute; bottom: 8px; left: 8px; font-size: 9px; color: #555; background: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 4px; }
-    .cluster { position: absolute; background: #2563eb; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 12px; border: 2px solid #fff; }
-    .hero-card { background: #fff; border-radius: 20px 20px 0 0; margin-top: -14px; padding: 16px 12px 8px; flex: 1; }
-    .phone.dark .hero-card { background: #1e1e1e; }
-    .hero-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-    .phone.dark .hero-card h2 { color: #fff; }
-    .hero-sub { font-size: 13px; color: #666; margin-bottom: 14px; }
-    .phone.dark .hero-sub { color: #aaa; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .member { text-align: center; }
-    .member .name { font-size: 12px; font-weight: 600; margin-top: 6px; }
-    .phone.dark .member .name { color: #eee; }
-    .member .loc { font-size: 10px; color: #666; margin-top: 2px; }
-    .member .de { font-size: 10px; color: #888; margin-top: 2px; }
+    .map-wrap { height: 268px; flex-shrink: 0; position: relative; }
+    #members-map { width: 100%; height: 100%; background: #dbeafe; }
+    .sheet {
+      flex: 1; background: #111827; border-radius: 20px 20px 0 0; margin-top: -12px;
+      padding: 16px 12px 0; min-height: 0; overflow: hidden;
+    }
+    .sheet h2 { font-size: 18px; font-weight: 700; }
+    .sheet .sub { font-size: 13px; color: #94a3b8; margin-top: 4px; margin-bottom: 12px; }
+    .grid { display: flex; flex-wrap: wrap; }
+    .member {
+      width: 33.333%; padding: 6px 4px 10px; text-align: center;
+    }
+    .member img, .member .ph {
+      width: 64px; height: 64px; border-radius: 32px; margin: 0 auto; object-fit: cover;
+      border: 2px solid #334155;
+    }
+    .member .ph {
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 22px; color: #60a5fa;
+    }
+    .member .name { font-size: 11px; font-weight: 700; margin-top: 6px; }
+    .member .loc { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
-    /* Sidebar */
-    .drawer { background: #fff; height: 100%; padding: 16px; overflow: hidden; }
-    .drawer-top { display: flex; justify-content: flex-end; margin-bottom: 8px; font-size: 22px; color: #666; }
-    .profile-block { display: flex; gap: 12px; margin-bottom: 16px; }
-    .profile-block .info h3 { font-size: 18px; font-weight: 700; }
-    .profile-block .info a { color: #2563eb; font-size: 14px; text-decoration: none; }
-    .profile-block .info .city { font-size: 13px; color: #666; margin-top: 4px; }
-    .email-btn { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid #e4e6eb; border-radius: 8px; margin-bottom: 20px; font-weight: 600; font-size: 14px; }
-    .section-h { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 8px; }
-    .nav-item { padding: 12px 8px; font-size: 15px; border-radius: 6px; }
-    .nav-item.active { background: #f3f2ef; font-weight: 600; }
-    .guide-item { display: flex; align-items: center; gap: 10px; padding: 10px 4px; font-size: 14px; color: #2563eb; }
+    /* Leaderboard */
+    .lb-scroll { flex: 1; overflow: hidden; padding: 0 12px; }
+    .lb-hint { font-size: 11px; color: #94a3b8; padding: 8px 4px 10px; line-height: 1.35; }
+    .lb-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .lb-tab {
+      flex: 1; text-align: center; padding: 10px; border-radius: 8px;
+      background: #1a2332; color: #94a3b8; font-weight: 600; font-size: 14px;
+    }
+    .lb-tab.on { background: #1e293b; color: #fff; border-bottom: 2px solid #ef4444; }
+    .lb-row {
+      display: flex; align-items: center; gap: 10px; padding: 12px;
+      border-radius: 12px; margin-bottom: 8px; border: 1px solid #334155;
+      background: #1a2332;
+    }
+    .lb-row.r1 { background: #000; border-color: #000; }
+    .lb-row.r2 { background: #DD0000; border-color: #DD0000; }
+    .lb-row.r3 { background: #FFCC00; border-color: #FFCC00; color: #111; }
+    .lb-row.r3 .meta, .lb-row.r3 .pts { color: #111 !important; }
+    .lb-rank { font-weight: 800; width: 28px; font-size: 15px; }
+    .lb-row img, .lb-row .ph {
+      width: 44px; height: 44px; border-radius: 22px; object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+    .lb-row .ph {
+      display: flex; align-items: center; justify-content: center; font-weight: 700;
+    }
+    .lb-meta { flex: 1; }
+    .lb-name { font-weight: 700; font-size: 15px; }
+    .lb-city { font-size: 12px; opacity: 0.75; }
+    .lb-pts { font-weight: 700; font-size: 14px; }
 
     /* Posts */
-    .feed { flex: 1; overflow: hidden; background: #f0f2f5; padding-bottom: 8px; }
-    .start-post { display: flex; align-items: center; gap: 10px; margin: 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; color: #666; }
-    .post { margin: 0 12px 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #e4e6eb; }
-    .post-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-    .post-head .meta { font-size: 12px; color: #666; }
-    .post h4 { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
-    .post p { font-size: 14px; color: #444; line-height: 1.4; }
-    .post .comments { font-size: 12px; color: #888; margin-top: 10px; }
+    .post {
+      margin: 0 12px 10px; padding: 14px; background: #1a2332; border-radius: 12px;
+      border: 1px solid #334155;
+    }
+    .post-head { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+    .post-head img, .post-head .ph {
+      width: 36px; height: 36px; border-radius: 18px; object-fit: cover;
+    }
+    .post-head .ph {
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; background: #334155;
+    }
+    .post h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+    .post p { font-size: 13px; color: #cbd5e1; line-height: 1.45; }
+    .post .comments { font-size: 12px; color: #64748b; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px; }
 
-    /* Chat */
-    .chat-msgs { flex: 1; padding: 12px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
-    .bubble { max-width: 88%; padding: 10px 12px; border-radius: 12px; font-size: 14px; line-height: 1.35; }
-    .bubble.o { background: #fff; border: 1px solid #e4e6eb; align-self: flex-start; }
-    .bubble .who { font-size: 11px; font-weight: 700; color: #2563eb; margin-bottom: 3px; }
-    .input-bar { display: flex; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #e4e6eb; }
-    .input-bar input { flex: 1; border: 1px solid #e5e5e5; border-radius: 20px; padding: 10px 14px; font-size: 15px; }
-    .send { width: 44px; height: 44px; border-radius: 22px; background: #25D366; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    /* Channel */
+    .chat { flex: 1; padding: 10px 12px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+    .msg-row { display: flex; gap: 8px; align-items: flex-start; }
+    .msg-row img, .msg-row .ph {
+      width: 32px; height: 32px; border-radius: 16px; flex-shrink: 0; object-fit: cover;
+    }
+    .msg-row .ph {
+      display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+    }
+    .bubble {
+      flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+      padding: 8px 10px; font-size: 13px; line-height: 1.4;
+    }
+    .bubble .who { color: #60a5fa; font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+    .input-bar {
+      display: flex; gap: 8px; padding: 10px 12px; background: #0b0f14; border-top: 1px solid #1e293b;
+    }
+    .input-bar .field {
+      flex: 1; background: #1a2332; border-radius: 22px; padding: 10px 14px;
+      color: #64748b; font-size: 15px;
+    }
+    .send {
+      width: 44px; height: 44px; border-radius: 22px; background: #22c55e;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+
+    /* Flyers */
+    .flyers-body { flex: 1; overflow: hidden; background: #111827; }
+    .fly-hero {
+      margin: 12px; padding: 14px; background: #1a2332; border-radius: 14px; border: 1px solid #334155;
+    }
+    .fly-scene {
+      height: 88px; background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%);
+      border-radius: 10px; margin-bottom: 10px; position: relative;
+    }
+    .fly-scene .plane { position: absolute; right: 24px; top: 20px; font-size: 26px; }
+    .fly-scene .flags { position: absolute; left: 12px; bottom: 8px; font-size: 18px; }
+    .fly-point { font-size: 12px; color: #cbd5e1; margin-bottom: 4px; line-height: 1.35; }
+    .cta {
+      margin-top: 10px; background: #f97316; color: #fff; text-align: center;
+      padding: 12px; border-radius: 10px; font-weight: 700;
+    }
+    .month { padding: 10px 16px 6px; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; }
+    .fly-row {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      background: #1a2332; margin: 0 12px 8px; border-radius: 12px; border: 1px solid #334155;
+    }
+    .fly-row img, .fly-row .ph {
+      width: 44px; height: 44px; border-radius: 22px; object-fit: cover;
+    }
+    .fly-row .route { font-size: 13px; font-weight: 600; }
+    .fly-row .city { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .fly-row .date { margin-left: auto; font-size: 11px; color: #94a3b8; text-align: right; max-width: 100px; }
+
+    /* Messages list */
+    .msg-nav { padding: 12px 16px; font-weight: 700; font-size: 17px; background: #0b0f14; }
+    .conv {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .conv img, .conv .ph { width: 48px; height: 48px; border-radius: 24px; object-fit: cover; }
+    .conv .hash {
+      width: 48px; height: 48px; border-radius: 24px; background: #14532d; color: #4ade80;
+      display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700;
+    }
+    .conv .name { font-weight: 600; font-size: 16px; }
+    .conv .prev { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .section-label { padding: 8px 16px; font-size: 11px; font-weight: 700; color: #64748b; }
 
     /* Jobs */
-    .job { margin: 12px; padding: 16px; background: #fff; border-radius: 12px; border: 1px solid #e4e6eb; }
-    .job h4 { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-    .job .co { color: #2563eb; font-size: 14px; margin-bottom: 4px; }
-    .job .loc { color: #888; font-size: 13px; }
+    .job {
+      margin: 10px 12px; padding: 14px; background: #1a2332; border-radius: 12px; border: 1px solid #334155;
+    }
+    .job h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+    .job .co { color: #94a3b8; font-size: 14px; margin-bottom: 8px; }
+    .job .meta { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+    .job p { font-size: 13px; color: #cbd5e1; line-height: 1.4; margin-bottom: 10px; }
+    .job .tag { display: inline-block; background: #0f172a; padding: 4px 10px; border-radius: 6px; font-size: 11px; color: #94a3b8; }
+    .apply { float: right; background: #f97316; color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; }
 
-    /* Messages */
-    .msg-nav { padding: 12px 16px; background: #fff; border-bottom: 1px solid #e4e6eb; font-weight: 700; font-size: 17px; }
-    .conv { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #fff; border-bottom: 1px solid #e4e6eb; }
-    .conv .hash { width: 48px; height: 48px; border-radius: 24px; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #25D366; }
-    .conv .body { flex: 1; }
-    .conv .name { font-weight: 600; font-size: 16px; }
-    .conv .prev { font-size: 13px; color: #666; margin-top: 2px; }
-    .section-label { padding: 8px 16px; font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; background: #f0f2f5; }
+    /* DM */
+    .dm-header {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      background: #0b0f14; border-bottom: 1px solid #1e293b;
+    }
+    .dm-header .back { font-size: 22px; color: #60a5fa; }
+    .dm-header img, .dm-header .ph { width: 40px; height: 40px; border-radius: 20px; }
+    .dm-header .name { font-weight: 700; font-size: 17px; }
+    .dm-header .sub { font-size: 12px; color: #94a3b8; }
+    .dm-chat { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .dm-in { align-self: flex-start; max-width: 82%; background: #1e293b; border: 1px solid #334155; padding: 10px 12px; border-radius: 12px; font-size: 14px; }
+    .dm-out { align-self: flex-end; max-width: 82%; background: #14532d; padding: 10px 12px; border-radius: 12px; font-size: 14px; }
   </style>
 </head>
 <body>
 <script>
+const PRIYA = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face';
 const AV = {
-  priya: 'https://randomuser.me/api/portraits/women/44.jpg',
-  ananya: 'https://randomuser.me/api/portraits/women/68.jpg',
-  kavitha: 'https://randomuser.me/api/portraits/women/65.jpg',
-  sneha: 'https://randomuser.me/api/portraits/women/32.jpg',
-  meera: 'https://randomuser.me/api/portraits/women/21.jpg',
-  aditi: 'https://randomuser.me/api/portraits/women/57.jpg',
-  rahul: 'https://randomuser.me/api/portraits/men/32.jpg',
-  arjun: 'https://randomuser.me/api/portraits/men/22.jpg',
-  vikram: 'https://randomuser.me/api/portraits/men/75.jpg',
-  rohan: 'https://randomuser.me/api/portraits/men/46.jpg',
-  aditya: 'https://randomuser.me/api/portraits/men/11.jpg',
-  karan: 'https://randomuser.me/api/portraits/men/52.jpg',
+  priya: PRIYA,
+  ananya: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
+  meera: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop&crop=face',
+  kavya: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&h=150&fit=crop&crop=face',
+  rahul: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+  arjun: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
+  divya: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+  vikram: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+  neha: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+  sanjay: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
 };
 
-function headerSearch(avatar, showBadge = true) {
-  return `<div class="status"></div>
-    <div class="header">
-      <img class="av av-36" src="${avatar}" alt="" />
-      <div class="search">🔍 Search by name, city</div>
-      <div class="icon-btn">💬${showBadge ? '<span class="badge9">9+</span>' : ''}</div>
-    </div>`;
+function appHeader() {
+  return `<div class="status"></div><div class="app-header">
+    <img class="av" src="${PRIYA}" alt="" />
+    <div class="search">🔍 Search by name, city</div>
+    <div class="msg-btn">💬<span class="badge9">9+</span></div>
+  </div>`;
 }
 
-function headerSimple(title, avatar) {
-  return `<div class="status"></div>
-    <div class="header simple">
-      <img class="av av-36" src="${avatar}" alt="" />
-      <div class="title">${title}</div>
-      <div class="icon-btn">💬<span class="badge9">9+</span></div>
-    </div>`;
+function simpleHeader(title) {
+  return `<div class="status"></div><div class="simple-header">
+    <img class="av-left" src="${PRIYA}" alt="" />
+    <h1>${title}</h1>
+    <div class="msg-btn">💬<span class="badge9">9+</span></div>
+  </div>`;
 }
 
 function tabs(active) {
-  const items = [
-    ['Members', '👥'], ['Posts', '📰'], ['Channel', '💬'], ['Jobs', '💼']
-  ];
-  return `<div class="tabs">${items.map(([l, ic]) =>
-    `<div class="tab${l === active ? ' active' : ''}"><span>${ic}</span>${l}</div>`
+  const items = [['Members','👥'],['Board','🏆'],['Posts','📰'],['Channel','💬'],['Flyers','✈️']];
+  return `<div class="tabs">${items.map(([l,ic]) =>
+    `<div class="tab${l===active?' on':''}"><span>${ic}</span>${l}</div>`
   ).join('')}</div>`;
 }
 
-const members = `
-<div class="phone active" id="screen-members">
-  ${headerSearch(AV.priya)}
-  <div class="content">
-    <div class="map">
-      <div class="cluster" style="top:38%;left:62%">+30</div>
-      <div class="cluster" style="top:42%;left:48%">+145</div>
-      <div class="cluster" style="top:55%;left:35%">+10</div>
-      <div class="cluster" style="top:30%;left:72%">+5</div>
-      <div class="map-label">Leaflet | © OpenStreetMap</div>
-    </div>
-    <div class="hero-card">
-      <h2>Willkommen Priya</h2>
-      <p class="hero-sub">270 Inder 🇮🇳 in Deutschland 🇩🇪, Say Hallo !!</p>
-      <div class="grid">
-        <div class="member"><img class="av av-64" src="${AV.ananya}" /><div class="name">Ananya Iyer</div><div class="loc">📍 Chennai</div><div class="de">Frankfurt 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.rahul}" /><div class="name">Rahul Kumar</div><div class="loc">📍 Pune</div><div class="de">Munich 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.kavitha}" /><div class="name">Kavitha Reddy</div><div class="loc">📍 Hyderabad</div><div class="de">Berlin 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.arjun}" /><div class="name">Arjun Menon</div><div class="loc">📍 Kochi</div><div class="de">Hamburg 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.sneha}" /><div class="name">Sneha Patel</div><div class="loc">📍 Ahmedabad</div><div class="de">Stuttgart 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.rohan}" /><div class="name">Rohan Gupta</div><div class="loc">📍 Delhi</div><div class="de">Cologne 🇩🇪</div></div>
+function ph(letter, bg) {
+  return `<div class="ph" style="background:${bg}">${letter}</div>`;
+}
+
+const screens = {
+  members: `<div class="phone active" id="screen-members">
+    ${appHeader()}
+    <div class="content">
+      <div class="map-wrap"><div id="members-map"></div></div>
+      <div class="sheet">
+        <h2>Willkommen Priya</h2>
+        <p class="sub">455 Inder 🇮🇳 in Deutschland 🇩🇪, Say Hallo !!</p>
+        <div class="grid">
+          <div class="member"><img src="${AV.ananya}" alt="" /><div class="name">Ananya Iyer</div><div class="loc">📍 Chennai</div><div class="loc">Munich 🇩🇪</div></div>
+          <div class="member"><img src="${AV.kavya}" alt="" /><div class="name">Kavya Nair</div><div class="loc">📍 Kochi</div><div class="loc">Berlin 🇩🇪</div></div>
+          <div class="member"><img src="${AV.rahul}" alt="" /><div class="name">Rahul Menon</div><div class="loc">📍 Pune</div><div class="loc">Frankfurt 🇩🇪</div></div>
+          <div class="member">${ph('S','#4c1d95')}<div class="name">Sneha Patel</div><div class="loc">📍 Ahmedabad</div><div class="loc">Hamburg 🇩🇪</div></div>
+          <div class="member"><img src="${AV.arjun}" alt="" /><div class="name">Arjun Varma</div><div class="loc">📍 Hyderabad</div><div class="loc">Stuttgart 🇩🇪</div></div>
+          <div class="member"><img src="${AV.meera}" alt="" /><div class="name">Meera Das</div><div class="loc">📍 Bangalore</div><div class="loc">Cologne 🇩🇪</div></div>
+        </div>
       </div>
     </div>
-  </div>
-  ${tabs('Members')}
-</div>`;
+    ${tabs('Members')}
+  </div>`,
 
-const sidebar = `
-<div class="phone" id="screen-sidebar">
-  <div class="status"></div>
-  <div class="drawer">
-    <div class="drawer-top">✕</div>
-    <div class="profile-block">
-      <img class="av av-48" src="${AV.ananya}" />
-      <div class="info">
-        <h3>Ananya Sharma</h3>
-        <a href="#">View Profile</a> · <a href="#">Settings</a>
-        <div class="city">Berlin, Germany</div>
+  leaderboard: `<div class="phone" id="screen-leaderboard">
+    ${simpleHeader('Top members in community')}
+    <div class="lb-scroll content">
+      <p class="lb-hint">How to be top — post · 10 pts, flyer · 10 pts, channel message · 2 pts, reply · 5 pts, daily open · 5 pts</p>
+      <div class="lb-tabs"><div class="lb-tab on">Weekly</div><div class="lb-tab">All time</div></div>
+      <div class="lb-row r1"><div class="lb-rank">#1</div>${ph('F','#0d9488')}<div class="lb-meta"><div class="lb-name">Fatima Khan</div><div class="lb-city">Berlin</div></div><div class="lb-pts">32 pts</div></div>
+      <div class="lb-row r2"><div class="lb-rank">#2</div>${ph('M','#7c3aed')}<div class="lb-meta"><div class="lb-name">Meena Krishnan</div><div class="lb-city">Kiel</div></div><div class="lb-pts">20 pts</div></div>
+      <div class="lb-row r3"><div class="lb-rank">#3</div>${ph('A','#ea580c')}<div class="lb-meta"><div class="lb-name">Aishwarya Reddy</div><div class="lb-city">Berlin</div></div><div class="lb-pts pts">15 pts</div></div>
+      <div class="lb-row"><div class="lb-rank">#4</div><img src="${AV.divya}" alt="" /><div class="lb-meta"><div class="lb-name">Divya Sharma</div><div class="lb-city">Erfurt</div></div><div class="lb-pts">15 pts</div></div>
+      <div class="lb-row"><div class="lb-rank">#5</div><img src="${AV.vikram}" alt="" /><div class="lb-meta"><div class="lb-name">Vikram Joshi</div><div class="lb-city">Heidelberg</div></div><div class="lb-pts">15 pts</div></div>
+    </div>
+    ${tabs('Board')}
+  </div>`,
+
+  posts: `<div class="phone" id="screen-posts">
+    ${simpleHeader('Community Posts')}
+    <div class="content" style="overflow:hidden;padding-top:8px">
+      <div class="post">
+        <div class="post-head"><img src="${AV.sanjay}" alt="" /><div><strong>Sanjay Mehta</strong><div style="font-size:11px;color:#64748b">12 Mar 2026</div></div></div>
+        <h3>WG room near TU Munich — October intake?</h3>
+        <p>Incoming master's student looking for a shared flat. Quiet, non-smoker, happy to split Anmeldung paperwork tips.</p>
+        <div class="comments">2 comments</div>
+      </div>
+      <div class="post">
+        <div class="post-head">${ph('N','#0369a1')}<div><strong>Neha Kapoor</strong><div style="font-size:11px;color:#64748b">8 Mar 2026</div></div></div>
+        <h3>Chancenkarte renewal — what worked for me in Berlin</h3>
+        <p>Sharing documents checklist and timeline. Happy to answer DMs if you're stuck at the Ausländerbehörde.</p>
+        <div class="comments">5 comments</div>
       </div>
     </div>
-    <div class="email-btn">✉️ Email all members</div>
-    <div class="section-h">Appearance</div>
-    <div class="nav-item active">☀️ Light ✓</div>
-    <div class="nav-item">🌙 Dark</div>
-    <div class="section-h">Navigation</div>
-    <div class="nav-item active">Members (270+)</div>
-    <div class="nav-item">Posts</div>
-    <div class="nav-item">Channel</div>
-    <div class="nav-item">Jobs</div>
-    <div class="section-h">Quick links</div>
-    <div class="guide-item">🎓 Student visa checklist</div>
-    <div class="guide-item">🎖️ Opportunity Card</div>
-    <div class="guide-item">🏠 City registration</div>
-  </div>
-</div>`;
+    ${tabs('Posts')}
+  </div>`,
 
-const posts = `
-<div class="phone" id="screen-posts">
-  ${headerSimple('Community Posts', AV.rahul)}
-  <div class="feed">
-    <div class="start-post">⊕ Start a post...</div>
-    <div class="post">
-      <div class="post-head"><img class="av av-36" src="${AV.meera}" /><div><strong>Meera Nair</strong><div class="meta">21/03/2026</div></div></div>
-      <h4>Visa renewal — Chancenkarte</h4>
-      <p>Hi all, I came to Berlin in 2025 on Chancenkarte. Sharing my experience with renewal...</p>
-      <div class="comments">3 comments</div>
+  channel: `<div class="phone" id="screen-channel">
+    ${simpleHeader('Channel')}
+    <div class="content">
+      <div class="chat">
+        <div class="msg-row"><img src="${AV.neha}" alt="" /><div class="bubble"><div class="who">Neha Kapoor</div>Anyone has tips for Kiel winter semester housing?</div></div>
+        <div class="msg-row">${ph('R','#ea580c')}<div class="bubble"><div class="who">Rahul Menon</div>Welcome everyone who joined this week 👋</div></div>
+        <div class="msg-row"><img src="${AV.ananya}" alt="" /><div class="bubble"><div class="who">Ananya Iyer</div>Indian grocery in Frankfurt — Saravana is solid for spices.</div></div>
+        <div class="msg-row"><img src="${AV.arjun}" alt="" /><div class="bubble"><div class="who">Arjun Varma</div>Job fair in Munich next month — who's going?</div></div>
+      </div>
+      <div class="input-bar"><div class="field">Type a message...</div><div class="send">➤</div></div>
     </div>
-    <div class="post">
-      <div class="post-head"><img class="av av-36" src="${AV.aditya}" /><div><strong>Aditya Joshi</strong><div class="meta">17/02/2026</div></div></div>
-      <h4>Accommodation in Rostock</h4>
-      <p>Incoming student at Universität Rostock looking for long-term accommodation near campus...</p>
-      <div class="comments">1 comment</div>
+    ${tabs('Channel')}
+  </div>`,
+
+  flyers: `<div class="phone" id="screen-flyers">
+    ${simpleHeader('Flyers')}
+    <div class="flyers-body content">
+      <div class="fly-hero">
+        <div class="fly-scene"><span class="plane">✈️</span><span class="flags">🇮🇳 🇩🇪</span></div>
+        <p class="fly-point">• Find a travel partner for the same flight or layover</p>
+        <p class="fly-point">• Ask someone who just landed for practical first-week tips</p>
+        <p class="fly-point">• Let others DM you if they need a hand before or after the journey</p>
+        <div class="cta">Add yours</div>
+      </div>
+      <div class="month">APRIL 2026</div>
+      <div class="fly-row"><img src="${AV.meera}" alt="" /><div><div class="route">🇮🇳 BLR → 🇩🇪 BER</div><div class="city">Bangalore → Berlin</div></div><div class="date">Sun, Apr 12, 2026</div></div>
+      <div class="fly-row"><img src="${AV.rahul}" alt="" /><div><div class="route">🇮🇳 DEL → 🇩🇪 MUC</div><div class="city">Delhi → Munich</div></div><div class="date">Thu, Apr 18, 2026</div></div>
+      <div class="month">MAY 2026</div>
+      <div class="fly-row"><img src="${AV.kavya}" alt="" /><div><div class="route">🇮🇳 HYD → 🇩🇪 FRA</div><div class="city">Hyderabad → Frankfurt</div></div><div class="date">Fri, May 2, 2026</div></div>
     </div>
-  </div>
-  ${tabs('Posts')}
-</div>`;
+    ${tabs('Flyers')}
+  </div>`,
 
-const channel = `
-<div class="phone" id="screen-channel">
-  ${headerSimple('#general', AV.kavitha)}
-  <div class="content">
-    <div class="chat-msgs">
-      <div class="bubble o"><div class="who">Priya Sharma</div>Hi everyone! Looking for job referrals in software testing in Germany 🙏</div>
-      <div class="bubble o"><div class="who">Rahul Kumar</div>Accommodation available for students in Berlin — DM me</div>
-      <div class="bubble o"><div class="who">Ananya Iyer</div>Radhe Radhe 🙏 Welcome to all new members!</div>
-      <div class="bubble o"><div class="who">Arjun Menon</div>Anyone know good Indian grocery in Munich?</div>
+  messages: `<div class="phone" id="screen-messages">
+    <div class="status"></div>
+    <div class="msg-nav">‹ Messaging</div>
+    <div class="content" style="background:#0b0f14">
+      <div class="conv"><div class="hash">#</div><div><div class="name">Group Channel</div><div class="prev">Community chat for all members</div></div></div>
+      <div class="section-label">RECENT CONVERSATIONS</div>
+      <div class="conv"><img src="${AV.ananya}" alt="" /><div><div class="name">Ananya Iyer</div><div class="prev">Thanks for the Anmeldung checklist!</div></div></div>
+      <div class="conv"><img src="${AV.rahul}" alt="" /><div><div class="name">Rahul Menon</div><div class="prev">See you at the Berlin meetup</div></div></div>
+      <div class="conv"><img src="${AV.arjun}" alt="" /><div><div class="name">Arjun Varma</div><div class="prev">Same flight in April?</div></div></div>
+      <div class="conv"><img src="${AV.neha}" alt="" /><div><div class="name">Neha Kapoor</div><div class="prev">Tap to open conversation</div></div></div>
     </div>
-    <div class="input-bar"><input placeholder="Type a message..." readonly /><div class="send">➤</div></div>
-  </div>
-  ${tabs('Channel')}
-</div>`;
+  </div>`,
 
-const jobs = `
-<div class="phone" id="screen-jobs">
-  ${headerSimple('Jobs', AV.arjun)}
-  <div class="content" style="overflow:auto">
-    <div class="job"><h4>Software Engineer (m/w/d)</h4><div class="co">TechVision GmbH</div><div class="loc">Berlin</div></div>
-    <div class="job"><h4>Marketing Manager (m/w/d)</h4><div class="co">Yunicorn</div><div class="loc">Hamburg</div></div>
-    <div class="job"><h4>DevOps Engineer (m/w/d)</h4><div class="co">DieEnergiekoppler GmbH</div><div class="loc">Dresden</div></div>
-    <div class="job"><h4>Data Analyst (m/w/d)</h4><div class="co">Analytics AG</div><div class="loc">Munich</div></div>
-  </div>
-  ${tabs('Jobs')}
-</div>`;
-
-const messages = `
-<div class="phone" id="screen-messages">
-  <div class="status"></div>
-  <div class="msg-nav">‹ Messaging</div>
-  <div class="content" style="background:#f0f2f5">
-    <div class="conv"><div class="hash">#</div><div class="body"><div class="name">Group Channel</div><div class="prev">Community chat for all members</div></div></div>
-    <div class="section-label">Recent conversations</div>
-    <div class="conv"><img class="av av-48" src="${AV.priya}" /><div class="body"><div class="name">Priya Sharma</div><div class="prev">See you at the meetup!</div></div></div>
-    <div class="conv"><img class="av av-48" src="${AV.rahul}" /><div class="body"><div class="name">Rahul Kumar</div><div class="prev">Thanks for the visa tips</div></div></div>
-    <div class="conv"><img class="av av-48" src="${AV.ananya}" /><div class="body"><div class="name">Ananya Iyer</div><div class="prev">Tap to open conversation</div></div></div>
-    <div class="conv"><img class="av av-48" src="${AV.kavitha}" /><div class="body"><div class="name">Kavitha Reddy</div><div class="prev">Room still available?</div></div></div>
-    <div class="conv"><img class="av av-48" src="${AV.arjun}" /><div class="body"><div class="name">Arjun Menon</div><div class="prev">Let's connect in Munich</div></div></div>
-    <div class="conv"><img class="av av-48" src="${AV.sneha}" /><div class="body"><div class="name">Sneha Patel</div><div class="prev">Tap to open conversation</div></div></div>
-  </div>
-</div>`;
-
-const dark = `
-<div class="phone dark" id="screen-dark">
-  ${headerSearch(AV.vikram).replace('background: #fff', 'background: #1a1a1a')}
-  <div class="content">
-    <div class="map" style="filter:brightness(0.75)">
-      <div class="cluster" style="top:42%;left:48%">+145</div>
-      <div class="cluster" style="top:38%;left:62%">+30</div>
-      <div class="map-label">Leaflet | © OpenStreetMap</div>
+  jobs: `<div class="phone" id="screen-jobs">
+    <div class="status"></div>
+    <div class="simple-header" style="padding-left:12px">
+      <span class="back" style="position:absolute;left:12px;font-size:15px;color:#60a5fa">‹ Back</span>
+      <h1>Jobs</h1>
     </div>
-    <div class="hero-card">
-      <h2>Willkommen Vikram</h2>
-      <p class="hero-sub">270 Inder 🇮🇳 in Deutschland 🇩🇪, Say Hallo !!</p>
-      <div class="grid">
-        <div class="member"><img class="av av-64" src="${AV.aditi}" /><div class="name">Aditi Verma</div><div class="loc">📍 Jaipur</div><div class="de">Berlin 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.karan}" /><div class="name">Karan Mehta</div><div class="loc">📍 Mumbai</div><div class="de">Frankfurt 🇩🇪</div></div>
-        <div class="member"><img class="av av-64" src="${AV.meera}" /><div class="name">Meera Nair</div><div class="loc">📍 Bangalore</div><div class="de">Munich 🇩🇪</div></div>
+    <div class="content" style="overflow:hidden;padding-top:4px">
+      <div class="job">
+        <h3>Software Engineer (m/f/d)</h3>
+        <div class="co">Nordlicht Digital GmbH</div>
+        <div class="meta">📍 Berlin · 🕐 Full-time · 📅 Mar 2026</div>
+        <p>Backend-focused role with TypeScript. Visa sponsorship possible for the right candidate.</p>
+        <span class="tag">Engineering</span><span class="apply">Apply Now</span>
+      </div>
+      <div class="job">
+        <h3>Payroll Specialist (all genders)</h3>
+        <div class="co">Integral HR Partners</div>
+        <div class="meta">📍 Munich · 🕐 Full-time · 📅 Feb 2026</div>
+        <p>German payroll experience preferred. English-speaking team, hybrid 2 days office.</p>
+        <span class="tag">Payroll</span><span class="apply">Apply Now</span>
       </div>
     </div>
-  </div>
-  ${tabs('Members')}
-</div>`;
+  </div>`,
+};
 
-document.body.innerHTML = members + sidebar + posts + channel + jobs + messages + dark;
+document.body.innerHTML = Object.values(screens).join('');
 
 const target = new URLSearchParams(location.search).get('screen');
 if (target) {
   document.querySelectorAll('.phone').forEach((el) => {
     el.classList.toggle('active', el.id === 'screen-' + target);
   });
+}
+
+function initMembersMap() {
+  const el = document.getElementById('members-map');
+  if (!el || el.dataset.ready) return;
+  el.dataset.ready = '1';
+  const map = L.map('members-map', { zoomControl: true, attributionControl: true }).setView([51.0, 10.5], 6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(map);
+  const accent = '#667eea';
+  const markers = [
+    [52.52, 13.405, 'Berlin', 42],
+    [48.1351, 11.582, 'Munich', 28],
+    [53.5511, 9.9937, 'Hamburg', 15],
+    [50.1109, 8.6821, 'Frankfurt', 19],
+    [51.0504, 13.7373, 'Dresden', 7],
+    [52.3759, 9.732, 'Hannover', 11],
+  ];
+  markers.forEach(([lat, lng, city, count]) => {
+    const icon = L.divIcon({
+      className: 'leaflet-custom-marker',
+      html: `<div class="leaflet-city-marker" style="display:inline-flex;align-items:flex-start;gap:6px;white-space:nowrap;padding:2px 4px">
+        <span style="font-size:15px;font-weight:600;color:#1a1a1a;font-family:sans-serif;text-shadow:0 0 3px rgba(255,255,255,0.85)">${city}</span>
+        <span style="font-size:10px;font-weight:700;color:#fff;background:${accent};padding:2px 6px;border-radius:10px">+${count}</span>
+      </div>`,
+      iconSize: [null, null],
+      iconAnchor: [0, 0],
+    });
+    L.marker([lat, lng], { icon }).addTo(map);
+  });
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+if (!target || target === 'members') {
+  setTimeout(initMembersMap, 200);
 }
 </script>
 </body>

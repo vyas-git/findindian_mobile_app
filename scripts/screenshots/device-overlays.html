@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Device screenshot overlays</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #000; }
+    .frame {
+      width: 470px; height: 1024px; position: fixed; left: 0; top: 0;
+      overflow: hidden; display: none;
+    }
+    .frame.active { display: block; }
+    .frame > img.base { width: 470px; height: 1024px; display: block; }
+    .cover { position: absolute; z-index: 1; }
+    .cover.circle { border-radius: 50%; }
+    .face {
+      position: absolute; z-index: 2; border-radius: 50%; object-fit: cover;
+    }
+    .patch {
+      position: absolute; z-index: 3; overflow: hidden;
+      display: flex; align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 700; color: #fff; white-space: nowrap;
+    }
+    .patch.name-sm { font-size: 11px; justify-content: center; }
+    .patch.name-md { font-size: 14px; padding-left: 4px; }
+    .patch.name-fly { font-size: 15px; padding-left: 4px; }
+    .patch.welcome { font-size: 18px; padding-left: 6px; }
+  </style>
+</head>
+<body>
+<script>
+/** 470×1024 device captures — covers erase old pixels, then face + label. */
+const W = 470;
+const SHEET = '#111827';
+const av = (id) => `avatars/${id}.png`;
+
+function colCx(col, cols = 3) {
+  return (W / cols) * col + W / cols / 2;
+}
+
+function circleCover(cx, cy, s, bg) {
+  const pad = 3;
+  const d = s + pad * 2;
+  return { circle: true, x: Math.round(cx - d / 2), y: Math.round(cy - d / 2), w: d, h: d, bg };
+}
+
+function face(cx, cy, s, src) {
+  return { src, x: Math.round(cx - s / 2), y: Math.round(cy - s / 2), s };
+}
+
+function rect(x, y, w, h, bg) {
+  return { circle: false, x, y, w, h, bg };
+}
+
+// --- Members ---
+function buildMembers() {
+  const covers = [];
+  const faces = [];
+  const patches = [];
+  const headerCx = 28;
+  const headerCy = 76;
+  const headerS = 36;
+
+  covers.push(rect(6, 50, 58, 48, '#0b0f14'));
+  faces.push(face(26, 74, headerS, av('w01')));
+  covers.push(rect(10, 458, 300, 28, SHEET));
+  patches.push({
+    x: 14, y: 460, w: 240, h: 26, bg: SHEET, text: 'Willkommen Priya', cls: 'welcome',
+  });
+
+  const avatarS = 60;
+  const cellW = W / 3;
+  const cellH = 166;
+  const firstRowY = 486;
+  const avatars = [
+    [av('w02'), av('w03'), av('m01')],
+    [av('w04'), av('w05'), av('m02')],
+    [av('w06'), av('m03'), av('w07')],
+  ];
+  const names = [
+    ['Ananya Iyer', 'Kavya Nair', 'Rahul Menon'],
+    ['Meera Das', 'Sneha Patel', 'Arjun Varma'],
+    ['Divya Sharma', 'Neha Kapoor', 'Isha Gupta'],
+  ];
+
+  avatars.forEach((row, ri) => {
+    const rowY = firstRowY + ri * cellH;
+    row.forEach((src, ci) => {
+      const cx = colCx(ci);
+      const cy = rowY + 42;
+      const nameY = rowY + 98;
+      covers.push(rect(Math.round(ci * cellW), rowY, Math.round(cellW), cellH, SHEET));
+      faces.push(face(cx, cy, avatarS, src));
+      patches.push({
+        x: Math.round(ci * cellW + 2),
+        y: nameY,
+        w: Math.round(cellW - 4),
+        h: 20,
+        bg: SHEET,
+        text: names[ri][ci],
+        cls: 'name-sm',
+      });
+    });
+  });
+
+  return { base: 'device-bases/members.jpg', covers, faces, patches };
+}
+
+// --- Leaderboard ---
+function buildLeaderboard() {
+  const covers = [];
+  const faces = [];
+  const patches = [];
+  const headerCx = 28;
+  const headerCy = 76;
+  const headerS = 36;
+  covers.push(rect(6, 50, 58, 48, '#0b0f14'));
+  faces.push(face(26, 74, headerS, av('w01')));
+
+  const rows = [
+    { src: av('w07'), name: 'Pooja Menon', bg: '#000000' },
+    { src: av('w08'), name: 'Meena Krishnan', bg: '#DD0000' },
+    { src: av('w09'), name: 'Aishwarya Reddy', bg: '#FFCC00', color: '#111' },
+    { src: av('w10'), name: 'Divya Sharma', bg: '#1c1c1e' },
+    { src: av('m04'), name: 'Vikram Joshi', bg: '#1c1c1e' },
+    { src: av('m05'), name: 'Karan Singh', bg: '#1c1c1e' },
+    { src: av('m06'), name: 'Rohit Desai', bg: '#1c1c1e' },
+    { src: av('m01'), name: 'Sanjay Mehta', bg: '#1c1c1e' },
+  ];
+  const firstTop = 206;
+  const rowH = 72;
+  const avCx = 78;
+  const avS = 40;
+  const nameX = 118;
+  const nameW = 165;
+  const nameH = 22;
+
+  rows.forEach((row, i) => {
+    const top = firstTop + i * rowH;
+    const cy = top + 36;
+    const nameY = top + 28;
+    covers.push(rect(46, top + 6, 250, 58, row.bg));
+    faces.push(face(avCx, cy, avS, row.src));
+    patches.push({
+      x: nameX,
+      y: nameY,
+      w: nameW,
+      h: nameH,
+      bg: row.bg,
+      text: row.name,
+      cls: 'name-md',
+      color: row.color,
+    });
+  });
+
+  return { base: 'device-bases/leaderboard.png', covers, faces, patches };
+}
+
+// --- Flyers ---
+function buildFlyers() {
+  const covers = [];
+  const faces = [];
+  const patches = [];
+  const card = '#1a2332';
+  const headerCx = 28;
+  const headerCy = 76;
+  const headerS = 36;
+  covers.push(rect(6, 50, 58, 48, '#0b0f14'));
+  faces.push(face(26, 74, headerS, av('w01')));
+
+  const rows = [
+    { src: av('w02'), name: 'Meera Nair' },
+    { src: av('m02'), name: 'Rohit Kapoor' },
+    { src: av('m03'), name: 'Aditya Sharma' },
+    { src: av('m04'), name: 'Karan Reddy' },
+    { src: av('w03'), name: 'Vikram Patel' },
+    { src: av('m05'), name: 'Arjun Iyer' },
+    { src: av('m06'), name: 'Yash Malhotra' },
+  ];
+  const firstTop = 248;
+  const rowH = 73;
+  const avCx = 52;
+  const avS = 42;
+  const nameX = 88;
+  const nameW = 230;
+  const nameH = 22;
+
+  rows.forEach((row, i) => {
+    const top = firstTop + i * rowH;
+    const cy = top + 38;
+    const nameY = top + 16;
+    covers.push(rect(16, top + 4, 438, 64, card));
+    faces.push(face(avCx, cy, avS, row.src));
+    patches.push({
+      x: nameX,
+      y: nameY,
+      w: nameW,
+      h: nameH,
+      bg: card,
+      text: row.name,
+      cls: 'name-fly',
+    });
+  });
+
+  return { base: 'device-bases/flyers.png', covers, faces, patches };
+}
+
+const screens = {
+  members: buildMembers(),
+  leaderboard: buildLeaderboard(),
+  flyers: buildFlyers(),
+};
+
+function renderCover(c) {
+  const cls = c.circle ? 'cover circle' : 'cover';
+  return `<div class="${cls}" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;background:${c.bg}"></div>`;
+}
+
+function render(id, cfg) {
+  const div = document.createElement('div');
+  div.className = 'frame' + (id === 'members' ? ' active' : '');
+  div.id = 'screen-' + id;
+  let html = `<img class="base" src="${cfg.base}" alt="" width="470" height="1024" />`;
+  for (const c of cfg.covers) html += renderCover(c);
+  for (const f of cfg.faces) {
+    html += `<img class="face" src="${f.src}" style="left:${f.x}px;top:${f.y}px;width:${f.s}px;height:${f.s}px" alt="" />`;
+  }
+  for (const p of cfg.patches) {
+    const color = p.color ? `color:${p.color}` : '';
+    html += `<div class="patch ${p.cls}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px;background:${p.bg};${color}">${p.text}</div>`;
+  }
+  div.innerHTML = html;
+  document.body.appendChild(div);
+}
+
+Object.entries(screens).forEach(([id, cfg]) => render(id, cfg));
+
+const target = new URLSearchParams(location.search).get('screen');
+if (target) {
+  document.querySelectorAll('.frame').forEach((el) => {
+    el.classList.toggle('active', el.id === 'screen-' + target);
+  });
+}
+</script>
+</body>
+</html>
