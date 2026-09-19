@@ -2,7 +2,7 @@
   "expo": {
     "name": "findIndian.de",
     "slug": "findIndian-de",
-    "version": "1.0.10",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,18 +14,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.findindian.de",
-      "buildNumber": "11",
+      "buildNumber": "16",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
         ],
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSMinimumSystemVersion": "11.0"
       }
     },
     "android": {
-      "versionCode": 11,
+      "versionCode": 16,
       "softwareKeyboardLayoutMode": "resize",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
@@ -94,7 +96,11 @@
           "sounds": [],
           "defaultChannel": "messages"
         }
-      ]
+      ],
+      "expo-sharing",
+      "expo-status-bar",
+      "@react-native-community/datetimepicker",
+      "./plugins/withMacDesignedForIphone.js"
     ],
     "owner": "saivyas-2"
   }

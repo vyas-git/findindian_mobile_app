@@ -187,7 +187,18 @@ export default function AppDrawer({
               onPress={() => handleNav('Channel', { dmUserId: undefined, dmUserName: undefined })}
               styles={styles}
             />
-            <DrawerLink label="Jobs" active={activeRoute === 'Jobs'} onPress={() => handleNav('Jobs')} styles={styles} />
+            <DrawerLink
+              label="Jobs"
+              active={activeRoute === 'Jobs'}
+              onPress={() => handleNav('Jobs')}
+              styles={styles}
+            />
+            <DrawerLink
+              label="Flyers"
+              active={activeRoute === 'TravelList'}
+              onPress={() => handleNav('TravelList')}
+              styles={styles}
+            />
 
             <View style={styles.divider} />
 

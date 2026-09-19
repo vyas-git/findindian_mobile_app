@@ -7,7 +7,7 @@ import {
   Image,
   RefreshControl,
   ActivityIndicator,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import CollapsibleHeroScroll from '../components/CollapsibleHeroScroll';
 import MembersMap from '../components/MembersMap';
@@ -17,25 +17,20 @@ import { useAppShell } from '../context/AppShellContext';
 import { AuthContext } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 
-const MAP_HERO_HEIGHT = Dimensions.get('window').height * 0.34;
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_PADDING = 12;
 const GRID_GAP = 10;
 const GRID_COLUMNS = 3;
-const GRID_ITEM_WIDTH =
-  (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
-const AVATAR_SIZE = Math.min(72, GRID_ITEM_WIDTH - 8);
 
-function MemberGridItem({ member, onPress }) {
+function MemberGridItem({ member, onPress, avatarSize }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, avatarSize), [colors, avatarSize]);
   const initial = (member.name || 'U').charAt(0).toUpperCase();
   const currentCity = member.city?.trim();
   const germanyCity = member.germany_city?.trim();
 
   return (
     <TouchableOpacity
-      style={[styles.gridItem, { width: GRID_ITEM_WIDTH }]}
+      style={styles.gridItem}
       onPress={() => onPress(member)}
       activeOpacity={0.85}
     >
@@ -67,11 +62,16 @@ function MemberGridItem({ member, onPress }) {
 }
 
 export default function MembersScreen({ navigation }) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const mapHeroHeight = windowHeight * 0.34;
+  const columnWidth = (windowWidth - GRID_PADDING * 2) / GRID_COLUMNS;
+  const avatarSize = Math.min(72, columnWidth - 12);
+
   const { apiRequest } = useApi();
   const { searchQuery } = useAppShell();
   const { user, userProfile } = useContext(AuthContext);
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, avatarSize), [colors, avatarSize]);
   const [members, setMembers] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -138,7 +138,7 @@ export default function MembersScreen({ navigation }) {
       <View style={styles.mapSection}>
         <CollapsibleHeroScroll
           hero={<MembersMap members={members} selectedCity={selectedCity} onCityPress={setSelectedCity} />}
-          heroHeight={MAP_HERO_HEIGHT}
+          heroHeight={mapHeroHeight}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadMembers(); }} />
           }
@@ -157,7 +157,12 @@ export default function MembersScreen({ navigation }) {
 
           <View style={styles.grid}>
             {filteredMembers.map((member) => (
-              <MemberGridItem key={member.id} member={member} onPress={handleMemberPress} />
+              <MemberGridItem
+                key={member.id}
+                member={member}
+                onPress={handleMemberPress}
+                avatarSize={avatarSize}
+              />
             ))}
           </View>
 
@@ -170,7 +175,7 @@ export default function MembersScreen({ navigation }) {
   );
 }
 
-function createStyles(colors) {
+function createStyles(colors, avatarSize) {
   return StyleSheet.create({
     flex: { flex: 1, backgroundColor: colors.shellBg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.shellBg },
@@ -192,24 +197,25 @@ function createStyles(colors) {
       flexWrap: 'wrap',
       paddingHorizontal: GRID_PADDING,
       paddingBottom: 24,
-      gap: GRID_GAP,
     },
     gridItem: {
+      width: `${100 / GRID_COLUMNS}%`,
       alignItems: 'center',
       paddingVertical: 8,
-      paddingHorizontal: 4,
+      paddingHorizontal: GRID_GAP / 2,
+      marginBottom: GRID_GAP,
     },
     avatar: {
-      width: AVATAR_SIZE,
-      height: AVATAR_SIZE,
-      borderRadius: AVATAR_SIZE / 2,
+      width: avatarSize,
+      height: avatarSize,
+      borderRadius: avatarSize / 2,
       borderWidth: 2,
       borderColor: colors.divider,
     },
     avatarFallback: {
-      width: AVATAR_SIZE,
-      height: AVATAR_SIZE,
-      borderRadius: AVATAR_SIZE / 2,
+      width: avatarSize,
+      height: avatarSize,
+      borderRadius: avatarSize / 2,
       backgroundColor: colors.shellBg,
       alignItems: 'center',
       justifyContent: 'center',

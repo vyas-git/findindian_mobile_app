@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>findIndian.de marketing slides</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+      background: #000;
+    }
+    .slide {
+      position: relative; overflow: hidden; display: none; flex-direction: column;
+      align-items: center; padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+      width: var(--w); height: var(--h);
+    }
+    .slide.active { display: flex; }
+    /* Deutschland: black · gold · red (findIndian.de brand) */
+    .bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        linear-gradient(90deg, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCE00 66.66%, #FFCE00 100%);
+      background-size: 100% 5px;
+      background-repeat: no-repeat;
+      background-position: top;
+    }
+    .bg .fill {
+      position: absolute; inset: 5px 0 0 0;
+      background: linear-gradient(165deg, #050505 0%, #121212 45%, #1a0808 78%, #0d0d0d 100%);
+    }
+    .bg .fill::before {
+      content: ''; position: absolute; width: 75%; height: 50%;
+      top: -5%; right: -12%; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 206, 0, 0.22) 0%, transparent 68%);
+    }
+    .bg .fill::after {
+      content: ''; position: absolute; width: 55%; height: 40%;
+      bottom: 0; left: -8%; border-radius: 50%;
+      background: radial-gradient(circle, rgba(221, 0, 0, 0.28) 0%, transparent 70%);
+    }
+    .content {
+      position: relative; z-index: 1; width: 100%; flex: 1; min-height: 0;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .brand {
+      display: flex; align-items: center; gap: var(--brand-gap);
+      margin-bottom: var(--head-margin); flex-shrink: 0;
+    }
+    .brand img {
+      width: var(--icon); height: var(--icon); border-radius: calc(var(--icon) * 0.22);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .brand span { color: #fff; font-size: var(--brand-font); font-weight: 800; letter-spacing: -0.5px; }
+    .headline {
+      color: #fff; font-size: var(--headline); font-weight: 800; text-align: center;
+      line-height: 1.12; margin-bottom: var(--sub-margin); max-width: 96%;
+      flex-shrink: 0;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+    }
+    .subhead {
+      color: #f5f5f5; font-size: var(--subhead); text-align: center;
+      line-height: 1.35; margin-bottom: var(--phone-margin); max-width: 94%;
+      font-weight: 600; flex-shrink: 0;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+    }
+    .phone-wrap {
+      flex: 1; min-height: 0; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .device {
+      padding: var(--bezel); border-radius: var(--device-radius);
+      background: linear-gradient(180deg, #2a2a2a 0%, #0a0a0a 100%);
+      box-shadow: 0 28px 56px rgba(0,0,0,0.55), 0 0 0 2px rgba(255, 206, 0, 0.35);
+      max-height: 100%;
+    }
+    .screen {
+      border-radius: var(--screen-radius); overflow: hidden; background: #000;
+      width: var(--screen-w); height: var(--screen-h); line-height: 0;
+    }
+    .screen img {
+      width: 100%; height: 100%; object-fit: cover; object-position: top center;
+      display: block;
+    }
+    .pill {
+      margin-top: var(--pill-margin); flex-shrink: 0;
+      background: rgba(255, 206, 0, 0.12);
+      padding: var(--pill-pad-y) var(--pill-pad-x); border-radius: 999px;
+      color: #FFCE00; font-size: var(--pill-font); font-weight: 700;
+      border: 1px solid rgba(255, 206, 0, 0.45);
+    }
+  </style>
+</head>
+<body>
+<script>
+const SLIDES = [
+  {
+    id: 'members',
+    headline: 'Find members on the map',
+    subhead: 'See Indians across Germany by city — browse, message, and connect.',
+    badge: 'Members & map',
+  },
+  {
+    id: 'leaderboard',
+    headline: 'Top members in the community',
+    subhead: 'Earn points for posts, flyers, channel messages, and daily check-ins.',
+    badge: 'Leaderboard',
+  },
+  {
+    id: 'posts',
+    headline: 'Community posts',
+    subhead: 'Visa, housing, and local tips from people who’ve been there.',
+    badge: 'Posts',
+  },
+  {
+    id: 'channel',
+    headline: 'Join the community channel',
+    subhead: 'Real-time chat with Indians across Germany — ask, share, and help.',
+    badge: 'Channel',
+  },
+  {
+    id: 'messages',
+    headline: 'Message members directly',
+    subhead: 'DM for visa tips, housing leads, and local advice.',
+    badge: 'Direct messages',
+  },
+  {
+    id: 'profile',
+    headline: 'Your community hub',
+    subhead: 'Members, jobs, posts, channel, flyers — plus guides for Germany.',
+    badge: 'Menu & quick links',
+  },
+  {
+    id: 'flyers',
+    headline: 'Share your journey',
+    subhead: 'Post your route and find Indians on the same flight.',
+    badge: 'Flyers',
+  },
+  {
+    id: 'flyers2',
+    headline: 'India → Germany travel',
+    subhead: 'Connect with travel companions before you land.',
+    badge: 'Flyers',
+  },
+  {
+    id: 'jobs',
+    headline: 'Jobs in Germany',
+    subhead: 'Openings across Berlin, Munich, Frankfurt & more.',
+    badge: 'Jobs',
+  },
+];
+
+const format = new URLSearchParams(location.search).get('format') || 'playstore';
+const isAppStore = format === 'appstore';
+const isAppStoreIpad = format === 'appstore-ipad';
+
+const root = document.documentElement;
+if (isAppStoreIpad) {
+  /* 12.9" iPad Pro portrait — 2048×2732 (App Store Connect) */
+  root.style.setProperty('--w', '2048px');
+  root.style.setProperty('--h', '2732px');
+  root.style.setProperty('--pad-top', '56px');
+  root.style.setProperty('--pad-x', '64px');
+  root.style.setProperty('--pad-bottom', '40px');
+  root.style.setProperty('--icon', '80px');
+  root.style.setProperty('--brand-gap', '18px');
+  root.style.setProperty('--brand-font', '44px');
+  root.style.setProperty('--head-margin', '18px');
+  root.style.setProperty('--headline', '58px');
+  root.style.setProperty('--sub-margin', '12px');
+  root.style.setProperty('--subhead', '30px');
+  root.style.setProperty('--phone-margin', '8px');
+  root.style.setProperty('--bezel', '8px');
+  root.style.setProperty('--device-radius', '40px');
+  root.style.setProperty('--screen-radius', '32px');
+  root.style.setProperty('--screen-w', '1100px');
+  root.style.setProperty('--screen-h', '2330px');
+  root.style.setProperty('--pill-margin', '14px');
+  root.style.setProperty('--pill-pad-y', '14px');
+  root.style.setProperty('--pill-pad-x', '32px');
+  root.style.setProperty('--pill-font', '24px');
+} else if (isAppStore) {
+  root.style.setProperty('--w', '1284px');
+  root.style.setProperty('--h', '2778px');
+  root.style.setProperty('--pad-top', '48px');
+  root.style.setProperty('--pad-x', '40px');
+  root.style.setProperty('--pad-bottom', '32px');
+  root.style.setProperty('--icon', '72px');
+  root.style.setProperty('--brand-gap', '16px');
+  root.style.setProperty('--brand-font', '38px');
+  root.style.setProperty('--head-margin', '14px');
+  root.style.setProperty('--headline', '52px');
+  root.style.setProperty('--sub-margin', '10px');
+  root.style.setProperty('--subhead', '28px');
+  root.style.setProperty('--phone-margin', '6px');
+  root.style.setProperty('--bezel', '7px');
+  root.style.setProperty('--device-radius', '36px');
+  root.style.setProperty('--screen-radius', '28px');
+  root.style.setProperty('--screen-w', '1080px');
+  root.style.setProperty('--screen-h', '2320px');
+  root.style.setProperty('--pill-margin', '12px');
+  root.style.setProperty('--pill-pad-y', '12px');
+  root.style.setProperty('--pill-pad-x', '28px');
+  root.style.setProperty('--pill-font', '22px');
+} else {
+  root.style.setProperty('--w', '1080px');
+  root.style.setProperty('--h', '1920px');
+  root.style.setProperty('--pad-top', '44px');
+  root.style.setProperty('--pad-x', '32px');
+  root.style.setProperty('--pad-bottom', '28px');
+  root.style.setProperty('--icon', '64px');
+  root.style.setProperty('--brand-gap', '14px');
+  root.style.setProperty('--brand-font', '32px');
+  root.style.setProperty('--head-margin', '12px');
+  root.style.setProperty('--headline', '44px');
+  root.style.setProperty('--sub-margin', '8px');
+  root.style.setProperty('--subhead', '24px');
+  root.style.setProperty('--phone-margin', '4px');
+  root.style.setProperty('--bezel', '6px');
+  root.style.setProperty('--device-radius', '32px');
+  root.style.setProperty('--screen-radius', '26px');
+  root.style.setProperty('--screen-w', '960px');
+  root.style.setProperty('--screen-h', '1680px');
+  root.style.setProperty('--pill-margin', '10px');
+  root.style.setProperty('--pill-pad-y', '8px');
+  root.style.setProperty('--pill-pad-x', '22px');
+  root.style.setProperty('--pill-font', '17px');
+}
+
+const base = new URL('.', location.href).href;
+const iconUrl = new URL('../../assets/icon.png', base).href;
+const params = new URLSearchParams(location.search);
+const enhancedParam = params.get('enhanced') || '../../screenshots/store-device-ui/enhanced';
+const mockupBase = new URL(
+  enhancedParam.endsWith('/') ? enhancedParam : `${enhancedParam}/`,
+  location.href
+).href;
+
+const SLIDE_IMAGE = {
+  members: 'members.png',
+  leaderboard: 'leaderboard.png',
+  posts: 'posts.png',
+  channel: 'channel.png',
+  profile: 'profile.png',
+  flyers: 'flyers.png',
+  flyers2: 'flyers2.png',
+  messages: 'messages.png',
+  jobs: 'jobs.png',
+};
+
+const activeSlide = params.get('slide');
+
+SLIDES.forEach((s, i) => {
+  const div = document.createElement('div');
+  const isActive = activeSlide ? s.id === activeSlide : i === 0;
+  div.className = 'slide' + (isActive ? ' active' : '');
+  div.id = 'slide-' + s.id;
+  div.innerHTML = `
+    <div class="bg"><div class="fill"></div></div>
+    <div class="content">
+      <div class="brand"><img src="${iconUrl}" alt="" /><span>findIndian.de</span></div>
+      <h1 class="headline">${s.headline}</h1>
+      <p class="subhead">${s.subhead}</p>
+      <div class="phone-wrap">
+        <div class="device">
+          <div class="screen">
+            <img src="${mockupBase}${SLIDE_IMAGE[s.id] || s.id + '.png'}" alt="" />
+          </div>
+        </div>
+      </div>
+      <div class="pill">${s.badge}</div>
+    </div>`;
+  document.body.appendChild(div);
+});
+</script>
+</body>
+</html>
