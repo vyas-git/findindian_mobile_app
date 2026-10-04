@@ -1,0 +1,39 @@
+name: EAS QA build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: android or ios or all
+        required: true
+        default: android
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: EAS build (QA)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          PLATFORM="${{ github.event.inputs.platform }}"
+          case "$PLATFORM" in
+            android) npx eas-cli build --profile qa --platform android --non-interactive ;;
+            ios) npx eas-cli build --profile qa --platform ios --non-interactive ;;
+            all)
+              npx eas-cli build --profile qa --platform android --non-interactive
+              npx eas-cli build --profile qa --platform ios --non-interactive
+              ;;
+            *) echo "Unknown platform: $PLATFORM"; exit 1 ;;
+          esac

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { AuthContext } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 
@@ -27,10 +30,16 @@ const BG_SYMBOLS = [
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { signInWithGoogle, signInWithLinkedIn } = React.useContext(AuthContext);
+  const { signInWithApple, signInWithGoogle, signInWithLinkedIn } = React.useContext(AuthContext);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [loadingProvider, setLoadingProvider] = useState(null);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => setAppleAvailable(false));
+  }, []);
 
   const handleSignIn = async (provider, signInFn) => {
     setLoadingProvider(provider);
@@ -77,6 +86,17 @@ export default function LoginScreen() {
           </Text>
 
           <View style={styles.actions}>
+            {appleAvailable ? (
+              <View pointerEvents={loadingProvider !== null ? 'none' : 'auto'}>
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={8}
+                  style={styles.appleLoginBtn}
+                  onPress={() => handleSignIn('apple', signInWithApple)}
+                />
+              </View>
+            ) : null}
             <TouchableOpacity
               style={styles.loginBtn}
               disabled={loadingProvider !== null}
@@ -106,6 +126,14 @@ export default function LoginScreen() {
                 </>
               )}
             </TouchableOpacity>
+
+            <Text style={styles.termsText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://www.findindian.de/terms.html')}>
+                Terms of Use and Community Guidelines
+              </Text>
+              .
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -138,6 +166,9 @@ function createStyles(colors) {
     subtitle: { fontSize: 20, color: colors.textSecondary, marginBottom: 16, fontWeight: '500', textAlign: 'center' },
     description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 32, textAlign: 'center' },
     actions: { gap: 12 },
+    termsText: { fontSize: 13, lineHeight: 19, color: colors.textSecondary, textAlign: 'center', marginTop: 4, paddingHorizontal: 8 },
+    termsLink: { color: colors.germanyRed, fontWeight: '700', textDecorationLine: 'underline' },
+    appleLoginBtn: { width: '100%', height: 52 },
     loginBtn: {
       flexDirection: 'row',
       alignItems: 'center',

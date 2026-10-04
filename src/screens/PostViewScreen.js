@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,17 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useApi } from '../hooks/useApi';
 import { useTheme } from '../context/ThemeContext';
+import { AuthContext } from '../context/AuthProvider';
 
-export default function PostViewScreen({ route }) {
+export default function PostViewScreen({ route, navigation }) {
   const { postId } = route.params;
   const { apiRequest } = useApi();
+  const { user } = useContext(AuthContext);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [post, setPost] = useState(null);
@@ -52,9 +56,48 @@ export default function PostViewScreen({ route }) {
     );
   }
 
+  const showSafetyActions = () => {
+    const authorId = post.user_id;
+    if (!authorId || authorId === user?.id) return;
+    Alert.alert('Safety options', `Manage your interaction with ${post.author_name || post.user_name || 'this member'}.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Report post',
+        onPress: async () => {
+          try {
+            await apiRequest('/api/reports', {
+              method: 'POST',
+              body: JSON.stringify({ reported_user_id: authorId, content_type: 'post', content_id: post.id, reason: 'Objectionable content' }),
+            });
+            Alert.alert('Report sent', 'Thank you. Our team will review this within 24 hours.');
+          } catch (e) { Alert.alert('Could not report', e.message); }
+        },
+      },
+      {
+        text: 'Block user',
+        style: 'destructive',
+        onPress: () => Alert.alert('Block this user?', 'Their posts and messages will be hidden immediately, and our moderation team will be notified.', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Block user', style: 'destructive', onPress: async () => {
+              try {
+                await apiRequest('/api/blocks', { method: 'POST', body: JSON.stringify({ blocked_user_id: authorId }) });
+                Alert.alert('User blocked', 'Their content has been removed from your experience.');
+                navigation.goBack();
+              } catch (e) { Alert.alert('Could not block user', e.message); }
+            },
+          },
+        ]),
+      },
+    ]);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      {post.title ? <Text style={styles.title}>{post.title}</Text> : null}
+      <View style={styles.titleRow}>
+        {post.title ? <Text style={styles.title}>{post.title}</Text> : null}
+        {post.user_id && post.user_id !== user?.id ? <TouchableOpacity onPress={showSafetyActions} accessibilityLabel="Report or block user"><Text style={styles.more}>•••</Text></TouchableOpacity> : null}
+      </View>
       <Text style={styles.meta}>
         {post.author_name || post.user_name} · {new Date(post.created_at).toLocaleDateString()}
       </Text>
@@ -78,6 +121,8 @@ function createStyles(colors) {
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.shellBg },
     container: { flex: 1, backgroundColor: colors.shellBg },
     title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: colors.textPrimary },
+    titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+    more: { color: colors.textSecondary, fontSize: 20, letterSpacing: 1, paddingHorizontal: 6 },
     meta: { color: colors.textSecondary, marginBottom: 16 },
     body: { fontSize: 16, lineHeight: 24, color: colors.textPrimary },
     image: { width: '100%', height: 200, borderRadius: 8, marginTop: 16 },

@@ -15,18 +15,19 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApi } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthProvider';
 import { NotificationContext } from '../context/NotificationContext';
 import { useAppShell } from '../context/AppShellContext';
 import { useTheme } from '../context/ThemeContext';
+import { appendMessageOnce, uniqueMessages } from '../utils/messages';
 
 const TAB_BAR_HEIGHT = 56;
 const SCREEN_HEADER_HEIGHT = 52;
 
-function MessageBubble({ message, isOwn, styles, showSender, onPressSender }) {
+function MessageBubble({ message, isOwn, styles, showSender, onPressSender, onLongPress }) {
   const senderId = message.user_id || message.from_user_id;
   const name = message.user_name || 'Member';
   const avatar = message.user_avatar;
@@ -55,14 +56,19 @@ function MessageBubble({ message, isOwn, styles, showSender, onPressSender }) {
           )}
         </TouchableOpacity>
       ) : null}
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
+      <TouchableOpacity
+        style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}
+        activeOpacity={isOwn ? 1 : 0.75}
+        onLongPress={!isOwn ? () => onLongPress?.(message) : undefined}
+        delayLongPress={350}
+      >
         {!isOwn && showSender ? (
           <TouchableOpacity onPress={openSender} disabled={!canOpen} activeOpacity={0.7}>
             <Text style={styles.senderName}>{name}</Text>
           </TouchableOpacity>
         ) : null}
         <Text style={styles.bubbleText}>{message.text}</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -74,6 +80,7 @@ export default function ChatScreen({ route, navigation }) {
   const { setHeader } = useAppShell();
   const { apiRequest } = useApi();
   const { colors } = useTheme();
+  const isFocused = useIsFocused();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [mode, setMode] = useState('channel');
   const [channel, setChannel] = useState(null);
@@ -103,17 +110,26 @@ export default function ChatScreen({ route, navigation }) {
 
   const handleBackFromDM = useCallback(() => {
     const returnTo = route.params?.returnTo;
-    setMode('channel');
-    setDmUserId(null);
+
+    // Returning to Channel: exit DM mode in place (same tab).
+    if (returnTo === 'Channel') {
+      setMode('channel');
+      setDmUserId(null);
+      navigation.setParams({
+        dmUserId: undefined,
+        dmUserName: undefined,
+        returnTo: undefined,
+      });
+      return;
+    }
+
+    // Leaving to another tab — navigate first so we don't briefly set #channel header.
     navigation.setParams({
       dmUserId: undefined,
       dmUserName: undefined,
       returnTo: undefined,
     });
 
-    if (returnTo === 'Channel') {
-      return;
-    }
     if (returnTo === 'Messages') {
       navigation.getParent()?.navigate('Messages');
       return;
@@ -128,6 +144,10 @@ export default function ChatScreen({ route, navigation }) {
     }
     if (returnTo === 'Leaderboard') {
       navigation.navigate('Leaderboard');
+      return;
+    }
+    if (returnTo === 'TravelList') {
+      navigation.getParent()?.navigate('Main', { screen: 'TravelList' });
       return;
     }
     navigation.navigate('Members');
@@ -162,11 +182,10 @@ export default function ChatScreen({ route, navigation }) {
   );
 
   useEffect(() => {
-    if (!inDM && channel?.name) {
-      const label = channel.name.startsWith('#') ? channel.name : `#${channel.name}`;
-      setHeader({ variant: 'title', title: label });
-    }
-  }, [inDM, channel?.name, setHeader]);
+    if (!isFocused || inDM || !channel?.name) return;
+    const label = channel.name.startsWith('#') ? channel.name : `#${channel.name}`;
+    setHeader({ variant: 'title', title: label });
+  }, [isFocused, inDM, channel?.name, setHeader]);
 
   const scrollToBottom = useCallback((animated = true) => {
     const list = listRef.current;
@@ -239,7 +258,7 @@ export default function ChatScreen({ route, navigation }) {
           newMessages.length > prev.length ||
           (newLastId && newLastId !== prevLastId && newMessages.length >= prev.length);
 
-        setMessages(newMessages);
+        setMessages(uniqueMessages(newMessages));
 
         if (!didInitialScrollRef.current) {
           pendingInitialScrollRef.current = true;
@@ -332,7 +351,7 @@ export default function ChatScreen({ route, navigation }) {
           method: 'POST',
           body: JSON.stringify({ text: msgText }),
         });
-        setMessages((prev) => [...prev, res]);
+        setMessages((prev) => appendMessageOnce(prev, res));
         isNearBottomRef.current = true;
         setTimeout(() => scrollToBottom(true), 50);
       } else if (mode === 'dm' && dmUserId) {
@@ -340,7 +359,7 @@ export default function ChatScreen({ route, navigation }) {
           method: 'POST',
           body: JSON.stringify({ text: msgText }),
         });
-        setMessages((prev) => [...prev, res]);
+        setMessages((prev) => appendMessageOnce(prev, res));
         isNearBottomRef.current = true;
         setTimeout(() => scrollToBottom(true), 50);
       }
@@ -379,10 +398,87 @@ export default function ChatScreen({ route, navigation }) {
               ) : null}
             </View>
           </View>
+          <TouchableOpacity
+            style={styles.safetyMenuBtn}
+            accessibilityLabel="Report or block user"
+            onPress={() => showDMSafetyActions()}
+          >
+            <Ionicons name="ellipsis-vertical" size={22} color={colors.textPrimary} />
+          </TouchableOpacity>
         </View>
       );
     }
     return null;
+  };
+
+  const showDMSafetyActions = () => {
+    if (!dmUserId) return;
+    Alert.alert('Safety options', `Manage your interaction with ${dmUser?.name || 'this member'}.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Report user',
+        onPress: async () => {
+          try {
+            await apiRequest('/api/reports', { method: 'POST', body: JSON.stringify({ reported_user_id: dmUserId, content_type: 'user', reason: 'Abusive behaviour in direct messages' }) });
+            Alert.alert('Report sent', 'Thank you. Our team will review this within 24 hours.');
+          } catch (e) { Alert.alert('Could not report', e.message); }
+        },
+      },
+      {
+        text: 'Block user', style: 'destructive', onPress: () => Alert.alert('Block this user?', 'Their messages will disappear immediately and they cannot message you.', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Block user', style: 'destructive', onPress: async () => {
+              try {
+                await apiRequest('/api/blocks', { method: 'POST', body: JSON.stringify({ blocked_user_id: dmUserId }) });
+                Alert.alert('User blocked', 'Their messages are now hidden.');
+                handleBackFromDM();
+              } catch (e) { Alert.alert('Could not block user', e.message); }
+            },
+          },
+        ]),
+      },
+    ]);
+  };
+
+  const showMessageSafetyActions = (message) => {
+    const senderId = message.user_id || message.from_user_id;
+    if (!senderId || senderId === user?.id) return;
+    const senderName = message.user_name || 'this member';
+    Alert.alert('Safety options', `Manage ${senderName}'s message.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Report message',
+        onPress: async () => {
+          try {
+            await apiRequest('/api/reports', {
+              method: 'POST',
+              body: JSON.stringify({
+                reported_user_id: senderId,
+                content_type: 'channel_message',
+                content_id: message.id,
+                reason: 'Objectionable message in community chat',
+              }),
+            });
+            Alert.alert('Report sent', 'Thank you. Our team will review this within 24 hours.');
+          } catch (e) { Alert.alert('Could not report', e.message); }
+        },
+      },
+      {
+        text: 'Block user', style: 'destructive', onPress: () => Alert.alert('Block this user?', 'Their messages will disappear immediately and they cannot contact you.', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Block user', style: 'destructive', onPress: async () => {
+              try {
+                await apiRequest('/api/blocks', { method: 'POST', body: JSON.stringify({ blocked_user_id: senderId }) });
+                setMessages((current) => current.filter((item) => (item.user_id || item.from_user_id) !== senderId));
+                Alert.alert('User blocked', 'Their messages are now hidden.');
+              } catch (e) { Alert.alert('Could not block user', e.message); }
+            },
+          },
+        ]),
+      },
+    ]);
   };
 
   if (loading) {
@@ -414,6 +510,7 @@ export default function ChatScreen({ route, navigation }) {
             styles={styles}
             showSender={!inDM}
             onPressSender={openSenderDM}
+            onLongPress={showMessageSafetyActions}
           />
         )}
         style={styles.messageList}
@@ -485,6 +582,7 @@ function createStyles(colors) {
     },
     headerAvatarText: { fontWeight: '700', color: colors.primary },
     dmHeaderInfo: { flex: 1 },
+    safetyMenuBtn: { padding: 8 },
     locationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
     locationText: { fontSize: 12, color: colors.textSecondary },
     messageList: { flex: 1, backgroundColor: colors.shellBg },

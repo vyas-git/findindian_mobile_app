@@ -5,13 +5,9 @@ import { useTheme } from '../context/ThemeContext';
 import { getCityCoordinates, groupMembersByCity } from '../data/germanyCityCoordinates';
 
 function buildMapHtml(isDark, accentColor) {
-  const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const textColor = isDark ? '#f5f5f5' : '#111b21';
-  const mapBg = isDark ? '#1a1a1a' : '#f5f6f6';
-  const selectedBg = isDark ? 'rgba(129, 140, 248, 0.28)' : 'rgba(102, 126, 234, 0.2)';
-  const selectedShadow = isDark ? 'rgba(129, 140, 248, 0.45)' : 'rgba(102, 126, 234, 0.4)';
+  const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const mapBg = '#e8eef2';
+  const textColor = isDark ? '#111' : '#111';
 
   return `<!DOCTYPE html>
 <html>
@@ -25,23 +21,28 @@ function buildMapHtml(isDark, accentColor) {
     .leaflet-custom-marker { background: transparent !important; border: none !important; }
     .leaflet-city-marker {
       display: inline-flex;
-      align-items: flex-start;
-      gap: 6px;
+      align-items: center;
+      gap: 8px;
       white-space: nowrap;
       cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 6px;
+      padding: 3px 4px 3px 2px;
+      border-radius: 8px;
     }
-    .leaflet-city-marker.selected {
-      background: ${selectedBg};
-      box-shadow: 0 2px 8px ${selectedShadow};
+    .leaflet-city-marker:hover { background: rgba(255, 255, 255, 0.92); }
+    .leaflet-city-marker.selected { background: rgba(221, 0, 0, 0.12); }
+    .leaflet-city-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: ${textColor};
+      font-family: sans-serif;
+      text-shadow: 0 0 3px rgba(255,255,255,0.9);
     }
-    .leaflet-city-name { font-size: 15px; font-weight: 600; color: ${textColor}; font-family: sans-serif; }
     .leaflet-city-badge {
-      font-size: 10px; font-weight: 700; color: #fff; background: ${accentColor};
-      padding: 2px 6px; border-radius: 10px;
+      font-size: 11px; font-weight: 700; color: #fff; background: ${accentColor};
+      padding: 3px 7px; border-radius: 999px; line-height: 1.2;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.45);
     }
-    .leaflet-city-marker.selected .leaflet-city-badge { background: #DD0000; }
+    .leaflet-city-marker.selected .leaflet-city-badge { background: #111; color: #fff; }
   </style>
 </head>
 <body>
@@ -69,11 +70,13 @@ function buildMapHtml(isDark, accentColor) {
     }
 
     function initMap() {
-      map = L.map('map', { zoomControl: true, attributionControl: true }).setView([51.0, 10.5], 6);
+      map = L.map('map', { zoomControl: true, attributionControl: true, zoomSnap: 0.5 }).setView([51.16, 10.45], 6);
       L.tileLayer('${tileUrl}', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors',
       }).addTo(map);
+      map.fitBounds([[47.27, 5.87], [55.08, 15.04]], { padding: [8, 8], maxZoom: 7 });
+      map.setZoom(map.getZoom() + 0.5);
     }
 
     window.updateMarkers = function(markers, selectedCity) {

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { apiRequestWithSession } from '../lib/api';
@@ -8,6 +8,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import * as QueryParams from 'expo-auth-session/build/QueryParams';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -237,6 +238,57 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithLinkedIn = () => signInWithProvider('linkedin_oidc');
 
+  const signInWithApple = async () => {
+    if (Platform.OS !== 'ios') {
+      return { error: new Error('Sign in with Apple is available on iPhone and iPad.') };
+    }
+
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        return { error: new Error('Apple did not return an identity token. Please try again.') };
+      }
+
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+      if (error) return { error };
+
+      // Apple provides a name only on the first authorization. Persist it immediately.
+      const fullName = [
+        credential.fullName?.givenName,
+        credential.fullName?.middleName,
+        credential.fullName?.familyName,
+      ].filter(Boolean).join(' ');
+      if (fullName) {
+        await supabase.auth.updateUser({
+          data: {
+            full_name: fullName,
+            first_name: credential.fullName?.givenName || undefined,
+            last_name: credential.fullName?.familyName || undefined,
+          },
+        });
+      }
+
+      if (data?.user) {
+        setUser(data.user);
+        await syncUserAfterAuth();
+      }
+      return { data };
+    } catch (e) {
+      if (e?.code === 'ERR_REQUEST_CANCELED') return { error: new Error('Login cancelled') };
+      console.error('Apple sign-in failed', e);
+      return { error: e };
+    }
+  };
+
   const signOut = useCallback(async () => {
     setUserProfile(null);
     return supabase.auth.signOut();
@@ -254,6 +306,7 @@ export const AuthProvider = ({ children }) => {
         signOut,
         signInWithGoogle,
         signInWithLinkedIn,
+        signInWithApple,
       }}
     >
       {children}
