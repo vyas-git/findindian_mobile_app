@@ -37,6 +37,7 @@ yarn-error.*
 
 # credentials / backups
 credentials.json
+google-services-qa.json
 *firebase-adminsdk*.json
 *keystore*
 *keystore-backup*

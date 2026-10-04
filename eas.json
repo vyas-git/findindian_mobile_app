@@ -36,6 +36,25 @@
         "simulator": false
       }
     },
+    "qa": {
+      "distribution": "internal",
+      "channel": "qa",
+      "env": {
+        "APP_VARIANT": "qa",
+        "EXPO_PUBLIC_API_URL": "https://api-qa.findindian.de",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://YOUR_QA_REF.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISH_KEY": "YOUR_QA_ANON_KEY",
+        "EXPO_USE_PRECOMPILED_MODULES": "0"
+      },
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "remote"
+      },
+      "ios": {
+        "credentialsSource": "remote",
+        "simulator": false
+      }
+    },
     "production": {
       "autoIncrement": true,
       "channel": "production",

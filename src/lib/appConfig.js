@@ -7,7 +7,7 @@ export const LOCAL_API_URL = 'http://localhost:8080';
 
 let didLogApiEnv = false;
 
-function isLocalApiHost(hostname) {
+export function isLocalApiHost(hostname) {
   if (!hostname) return false;
   if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
   if (/^192\.168\.\d+\.\d+$/.test(hostname)) return true;
