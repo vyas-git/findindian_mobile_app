@@ -92,6 +92,20 @@ export default function PostViewScreen({ route, navigation }) {
     ]);
   };
 
+  const showCommentSafetyActions = (comment) => {
+    const authorId = comment.user_id;
+    if (!authorId || authorId === user?.id) return;
+    Alert.alert('Comment options', 'Report this comment to the findIndian.de moderators?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Report comment', onPress: async () => {
+        try {
+          await apiRequest('/api/reports', { method: 'POST', body: JSON.stringify({ reported_user_id: authorId, content_type: 'comment', content_id: comment.id, reason: 'Objectionable comment' }) });
+          Alert.alert('Report sent', 'Thank you. Our team will review this within 24 hours.');
+        } catch (e) { Alert.alert('Could not report', e.message); }
+      } },
+    ]);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <View style={styles.titleRow}>
@@ -108,7 +122,7 @@ export default function PostViewScreen({ route, navigation }) {
       <Text style={styles.commentsTitle}>Comments ({comments.length})</Text>
       {comments.map((c) => (
         <View key={c.id} style={styles.comment}>
-          <Text style={styles.commentAuthor}>{c.user_name || 'User'}</Text>
+          <View style={styles.commentHeader}><Text style={styles.commentAuthor}>{c.user_name || 'User'}</Text>{c.user_id && c.user_id !== user?.id ? <TouchableOpacity onPress={() => showCommentSafetyActions(c)} accessibilityLabel="Report comment"><Text style={styles.commentMore}>•••</Text></TouchableOpacity> : null}</View>
           <Text style={styles.commentBody}>{c.content || c.text}</Text>
         </View>
       ))}
@@ -129,6 +143,8 @@ function createStyles(colors) {
     commentsTitle: { fontWeight: '700', fontSize: 18, marginTop: 24, marginBottom: 12, color: colors.textPrimary },
     comment: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.divider },
     commentAuthor: { fontWeight: '700', fontSize: 13, color: colors.textPrimary },
+    commentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    commentMore: { color: colors.textSecondary, fontSize: 16, letterSpacing: 1 },
     commentBody: { marginTop: 4, fontSize: 14, color: colors.textPrimary },
     empty: { color: colors.textSecondary },
   });

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useApi } from '../hooks/useApi';
 import { useAppShell } from '../context/AppShellContext';
 import { AuthContext } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 const GRID_PADDING = 12;
 const GRID_GAP = 10;
@@ -89,9 +90,9 @@ export default function MembersScreen({ navigation }) {
     }
   }, [apiRequest]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     loadMembers();
-  }, [loadMembers]);
+  }, [loadMembers]));
 
   const filteredMembers = useMemo(() => {
     let list = members;
