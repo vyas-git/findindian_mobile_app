@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { AuthContext } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 
@@ -27,12 +30,23 @@ const BG_SYMBOLS = [
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { signInWithGoogle, signInWithLinkedIn } = React.useContext(AuthContext);
+  const { signInWithApple, signInWithGoogle, signInWithLinkedIn } = React.useContext(AuthContext);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [loadingProvider, setLoadingProvider] = useState(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => setAppleAvailable(false));
+  }, []);
 
   const handleSignIn = async (provider, signInFn) => {
+    if (!acceptedTerms) {
+      Alert.alert('Accept the Terms first', 'Please agree to the Terms of Use and Community Guidelines before continuing.');
+      return;
+    }
     setLoadingProvider(provider);
     try {
       const { error } = await signInFn();
@@ -78,8 +92,38 @@ export default function LoginScreen() {
 
           <View style={styles.actions}>
             <TouchableOpacity
-              style={styles.loginBtn}
-              disabled={loadingProvider !== null}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: acceptedTerms }}
+              style={styles.termsRow}
+              onPress={() => setAcceptedTerms((accepted) => !accepted)}
+            >
+              <Ionicons
+                name={acceptedTerms ? 'checkbox' : 'square-outline'}
+                size={22}
+                color={acceptedTerms ? colors.germanyRed : colors.textSecondary}
+              />
+              <Text style={styles.termsText}>
+                I agree to the{' '}
+                <Text style={styles.termsLink} onPress={() => Linking.openURL('https://www.findindian.de/terms.html')}>
+                  Terms of Use and Community Guidelines
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
+            {appleAvailable ? (
+              <View pointerEvents={loadingProvider !== null || !acceptedTerms ? 'none' : 'auto'} style={!acceptedTerms ? styles.disabledLogin : undefined}>
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={8}
+                  style={styles.appleLoginBtn}
+                  onPress={() => handleSignIn('apple', signInWithApple)}
+                />
+              </View>
+            ) : null}
+            <TouchableOpacity
+              style={[styles.loginBtn, !acceptedTerms && styles.disabledLogin]}
+              disabled={loadingProvider !== null || !acceptedTerms}
               onPress={() => handleSignIn('google', signInWithGoogle)}
             >
               {loadingProvider === 'google' ? (
@@ -93,8 +137,8 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.loginBtn, styles.linkedinBtn]}
-              disabled={loadingProvider !== null}
+              style={[styles.loginBtn, styles.linkedinBtn, !acceptedTerms && styles.disabledLogin]}
+              disabled={loadingProvider !== null || !acceptedTerms}
               onPress={() => handleSignIn('linkedin', signInWithLinkedIn)}
             >
               {loadingProvider === 'linkedin' ? (
@@ -138,6 +182,11 @@ function createStyles(colors) {
     subtitle: { fontSize: 20, color: colors.textSecondary, marginBottom: 16, fontWeight: '500', textAlign: 'center' },
     description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 32, textAlign: 'center' },
     actions: { gap: 12 },
+    termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, paddingHorizontal: 2, marginBottom: 4 },
+    termsText: { flex: 1, fontSize: 13, lineHeight: 19, color: colors.textSecondary },
+    termsLink: { color: colors.germanyRed, fontWeight: '700', textDecorationLine: 'underline' },
+    appleLoginBtn: { width: '100%', height: 52 },
+    disabledLogin: { opacity: 0.45 },
     loginBtn: {
       flexDirection: 'row',
       alignItems: 'center',

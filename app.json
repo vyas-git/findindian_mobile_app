@@ -15,6 +15,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.findindian.de",
       "buildNumber": "16",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
@@ -99,6 +100,7 @@
       ],
       "expo-sharing",
       "expo-status-bar",
+      "expo-apple-authentication",
       "@react-native-community/datetimepicker",
       "./plugins/withMacDesignedForIphone.js"
     ],
