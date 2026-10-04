@@ -22,6 +22,7 @@ import { AuthContext } from '../context/AuthProvider';
 import { NotificationContext } from '../context/NotificationContext';
 import { useAppShell } from '../context/AppShellContext';
 import { useTheme } from '../context/ThemeContext';
+import { appendMessageOnce, uniqueMessages } from '../utils/messages';
 
 const TAB_BAR_HEIGHT = 56;
 const SCREEN_HEADER_HEIGHT = 52;
@@ -257,7 +258,7 @@ export default function ChatScreen({ route, navigation }) {
           newMessages.length > prev.length ||
           (newLastId && newLastId !== prevLastId && newMessages.length >= prev.length);
 
-        setMessages(newMessages);
+        setMessages(uniqueMessages(newMessages));
 
         if (!didInitialScrollRef.current) {
           pendingInitialScrollRef.current = true;
@@ -350,7 +351,7 @@ export default function ChatScreen({ route, navigation }) {
           method: 'POST',
           body: JSON.stringify({ text: msgText }),
         });
-        setMessages((prev) => [...prev, res]);
+        setMessages((prev) => appendMessageOnce(prev, res));
         isNearBottomRef.current = true;
         setTimeout(() => scrollToBottom(true), 50);
       } else if (mode === 'dm' && dmUserId) {
@@ -358,7 +359,7 @@ export default function ChatScreen({ route, navigation }) {
           method: 'POST',
           body: JSON.stringify({ text: msgText }),
         });
-        setMessages((prev) => [...prev, res]);
+        setMessages((prev) => appendMessageOnce(prev, res));
         isNearBottomRef.current = true;
         setTimeout(() => scrollToBottom(true), 50);
       }
