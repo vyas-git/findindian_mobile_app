@@ -425,13 +425,13 @@ export default function ChatScreen({ route, navigation }) {
         },
       },
       {
-        text: 'Block user', style: 'destructive', onPress: () => Alert.alert('Block this user?', 'Their messages will disappear immediately and they cannot message you.', [
+        text: 'Block user', style: 'destructive', onPress: () => Alert.alert('Block this user?', 'Their profile, posts, and messages will be hidden immediately, and they cannot message you.', [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Block user', style: 'destructive', onPress: async () => {
               try {
                 await apiRequest('/api/blocks', { method: 'POST', body: JSON.stringify({ blocked_user_id: dmUserId }) });
-                Alert.alert('User blocked', 'Their messages are now hidden.');
+                Alert.alert('User blocked', 'Their profile, posts, and messages are now hidden.');
                 handleBackFromDM();
               } catch (e) { Alert.alert('Could not block user', e.message); }
             },
@@ -465,14 +465,14 @@ export default function ChatScreen({ route, navigation }) {
         },
       },
       {
-        text: 'Block user', style: 'destructive', onPress: () => Alert.alert('Block this user?', 'Their messages will disappear immediately and they cannot contact you.', [
+        text: 'Block user', style: 'destructive', onPress: () => Alert.alert('Block this user?', 'Their profile, posts, and messages will be hidden immediately, and they cannot contact you.', [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Block user', style: 'destructive', onPress: async () => {
               try {
                 await apiRequest('/api/blocks', { method: 'POST', body: JSON.stringify({ blocked_user_id: senderId }) });
                 setMessages((current) => current.filter((item) => (item.user_id || item.from_user_id) !== senderId));
-                Alert.alert('User blocked', 'Their messages are now hidden.');
+                Alert.alert('User blocked', 'Their profile, posts, and messages are now hidden.');
               } catch (e) { Alert.alert('Could not block user', e.message); }
             },
           },
