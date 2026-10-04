@@ -34,7 +34,6 @@ export default function LoginScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [loadingProvider, setLoadingProvider] = useState(null);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
 
   useEffect(() => {
@@ -43,10 +42,6 @@ export default function LoginScreen() {
   }, []);
 
   const handleSignIn = async (provider, signInFn) => {
-    if (!acceptedTerms) {
-      Alert.alert('Accept the Terms first', 'Please agree to the Terms of Use and Community Guidelines before continuing.');
-      return;
-    }
     setLoadingProvider(provider);
     try {
       const { error } = await signInFn();
@@ -91,27 +86,8 @@ export default function LoginScreen() {
           </Text>
 
           <View style={styles.actions}>
-            <TouchableOpacity
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: acceptedTerms }}
-              style={styles.termsRow}
-              onPress={() => setAcceptedTerms((accepted) => !accepted)}
-            >
-              <Ionicons
-                name={acceptedTerms ? 'checkbox' : 'square-outline'}
-                size={22}
-                color={acceptedTerms ? colors.germanyRed : colors.textSecondary}
-              />
-              <Text style={styles.termsText}>
-                I agree to the{' '}
-                <Text style={styles.termsLink} onPress={() => Linking.openURL('https://www.findindian.de/terms.html')}>
-                  Terms of Use and Community Guidelines
-                </Text>
-              </Text>
-            </TouchableOpacity>
-
             {appleAvailable ? (
-              <View pointerEvents={loadingProvider !== null || !acceptedTerms ? 'none' : 'auto'} style={!acceptedTerms ? styles.disabledLogin : undefined}>
+              <View pointerEvents={loadingProvider !== null ? 'none' : 'auto'}>
                 <AppleAuthentication.AppleAuthenticationButton
                   buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
                   buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
@@ -122,8 +98,8 @@ export default function LoginScreen() {
               </View>
             ) : null}
             <TouchableOpacity
-              style={[styles.loginBtn, !acceptedTerms && styles.disabledLogin]}
-              disabled={loadingProvider !== null || !acceptedTerms}
+              style={styles.loginBtn}
+              disabled={loadingProvider !== null}
               onPress={() => handleSignIn('google', signInWithGoogle)}
             >
               {loadingProvider === 'google' ? (
@@ -137,8 +113,8 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.loginBtn, styles.linkedinBtn, !acceptedTerms && styles.disabledLogin]}
-              disabled={loadingProvider !== null || !acceptedTerms}
+              style={[styles.loginBtn, styles.linkedinBtn]}
+              disabled={loadingProvider !== null}
               onPress={() => handleSignIn('linkedin', signInWithLinkedIn)}
             >
               {loadingProvider === 'linkedin' ? (
@@ -150,6 +126,14 @@ export default function LoginScreen() {
                 </>
               )}
             </TouchableOpacity>
+
+            <Text style={styles.termsText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.termsLink} onPress={() => Linking.openURL('https://www.findindian.de/terms.html')}>
+                Terms of Use and Community Guidelines
+              </Text>
+              .
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -182,11 +166,9 @@ function createStyles(colors) {
     subtitle: { fontSize: 20, color: colors.textSecondary, marginBottom: 16, fontWeight: '500', textAlign: 'center' },
     description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 32, textAlign: 'center' },
     actions: { gap: 12 },
-    termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, paddingHorizontal: 2, marginBottom: 4 },
-    termsText: { flex: 1, fontSize: 13, lineHeight: 19, color: colors.textSecondary },
+    termsText: { fontSize: 13, lineHeight: 19, color: colors.textSecondary, textAlign: 'center', marginTop: 4, paddingHorizontal: 8 },
     termsLink: { color: colors.germanyRed, fontWeight: '700', textDecorationLine: 'underline' },
     appleLoginBtn: { width: '100%', height: 52 },
-    disabledLogin: { opacity: 0.45 },
     loginBtn: {
       flexDirection: 'row',
       alignItems: 'center',
