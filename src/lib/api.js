@@ -1,6 +1,7 @@
 import { getValidSession } from './session';
 import { getAppConfig } from './appConfig';
 import { supabase } from './supabase';
+import { getPlatformHeaders } from './platformHeaders';
 
 const { apiUrl: API_URL } = getAppConfig();
 
@@ -11,6 +12,7 @@ async function authorizedFetch(session, endpoint, options = {}) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session.access_token}`,
       ...options.headers,
+      ...getPlatformHeaders(),
     },
   });
 }

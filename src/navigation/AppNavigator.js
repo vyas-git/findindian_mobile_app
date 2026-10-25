@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -163,7 +163,11 @@ function MainTabsContent({ navigation }) {
   }, [navigation]);
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.shellBg }]}>
+    <KeyboardAvoidingView
+      style={[styles.flex, { backgroundColor: colors.shellBg }]}
+      behavior={Platform.OS === 'android' ? 'height' : undefined}
+      enabled={Platform.OS === 'android' && activeRoute === 'Channel' && !hideChrome}
+    >
       {hideChrome ? null : activeRoute === 'Members' ? (
         <AppHeader
           user={user}
@@ -222,7 +226,7 @@ function MainTabsContent({ navigation }) {
         <Tab.Screen
           name="Channel"
           component={ChatScreen}
-          options={{ title: 'Channel' }}
+          options={{ title: 'Channel', tabBarHideOnKeyboard: Platform.OS === 'android' }}
           listeners={({ navigation: tabNav }) => ({
             tabPress: () => {
               tabNav.navigate('Channel', { dmUserId: undefined, dmUserName: undefined });
@@ -261,7 +265,7 @@ function MainTabsContent({ navigation }) {
         }}
       />
       <GermanyCityModal visible={Boolean(needsCity)} onSaved={() => refreshProfile()} />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

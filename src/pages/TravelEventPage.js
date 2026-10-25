@@ -128,7 +128,7 @@ export default function TravelEventPage({ route, navigation }) {
           isOwner={isOwner}
           onJoin={handleJoin}
           onShare={handleShare}
-          onDownload={handleDownload}
+          onDownload={isOwner ? handleDownload : undefined}
           onDelete={handleDelete}
           deleting={deleting}
           pageUrl={pageUrl}

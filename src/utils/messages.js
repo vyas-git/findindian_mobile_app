@@ -13,3 +13,16 @@ export const appendMessageOnce = (messages = [], message) => {
   }
   return [...messages, message];
 };
+
+// Use the native scroll view when available. FlatList's scrollToIndex cannot
+// jump to an unmeasured message when chat bubbles have different heights.
+export const scrollToLatest = (list, animated = true) => {
+  if (!list) return;
+
+  const scrollResponder = list.getScrollResponder?.();
+  if (scrollResponder?.scrollToEnd) {
+    scrollResponder.scrollToEnd({ animated });
+  } else {
+    list.scrollToEnd?.({ animated });
+  }
+};

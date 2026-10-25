@@ -22,7 +22,7 @@ import { AuthContext } from '../context/AuthProvider';
 import { NotificationContext } from '../context/NotificationContext';
 import { useAppShell } from '../context/AppShellContext';
 import { useTheme } from '../context/ThemeContext';
-import { appendMessageOnce, uniqueMessages } from '../utils/messages';
+import { appendMessageOnce, scrollToLatest, uniqueMessages } from '../utils/messages';
 
 const TAB_BAR_HEIGHT = 56;
 const SCREEN_HEADER_HEIGHT = 52;
@@ -188,37 +188,28 @@ export default function ChatScreen({ route, navigation }) {
   }, [isFocused, inDM, channel?.name, setHeader]);
 
   const scrollToBottom = useCallback((animated = true) => {
-    const list = listRef.current;
-    if (!list) return;
-    const count = messagesRef.current.length;
-    if (count > 0) {
-      try {
-        list.scrollToIndex({ index: count - 1, animated, viewPosition: 1 });
-        return;
-      } catch {
-        // fall through to scrollToEnd
-      }
-    }
-    list.scrollToEnd({ animated });
+    scrollToLatest(listRef.current, animated);
   }, []);
+
+  const scrollToInitialMessages = useCallback(() => {
+    if (!pendingInitialScrollRef.current || !listRef.current || !messagesRef.current.length) return;
+    pendingInitialScrollRef.current = false;
+    didInitialScrollRef.current = true;
+    isNearBottomRef.current = true;
+    scrollToBottom(false);
+  }, [scrollToBottom]);
 
   const handleContentSizeChange = useCallback(() => {
     if (pendingInitialScrollRef.current) {
-      pendingInitialScrollRef.current = false;
-      didInitialScrollRef.current = true;
-      requestAnimationFrame(() => scrollToBottom(false));
-    }
-  }, [scrollToBottom]);
-
-  const handleScrollToIndexFailed = useCallback((info) => {
-    setTimeout(() => {
-      listRef.current?.scrollToIndex({
-        index: info.index,
-        animated: false,
-        viewPosition: 1,
+      requestAnimationFrame(scrollToInitialMessages);
+    } else if (didInitialScrollRef.current && isNearBottomRef.current) {
+      // Variable-height messages may finish measuring after the first scroll.
+      // Keep the latest message visible unless the user is reading history.
+      requestAnimationFrame(() => {
+        if (isNearBottomRef.current) scrollToBottom(false);
       });
-    }, 100);
-  }, []);
+    }
+  }, [scrollToBottom, scrollToInitialMessages]);
 
   useEffect(() => {
     didInitialScrollRef.current = false;
@@ -226,10 +217,31 @@ export default function ChatScreen({ route, navigation }) {
     isNearBottomRef.current = true;
   }, [conversationKey]);
 
+  useEffect(() => {
+    if (!isFocused || mode !== 'channel' || !listRef.current || !messagesRef.current.length) {
+      return undefined;
+    }
+    // The channel tab can stay mounted while another tab is open.
+    const frame = requestAnimationFrame(() => {
+      isNearBottomRef.current = true;
+      scrollToBottom(false);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isFocused, mode, scrollToBottom]);
+
+  useEffect(() => {
+    // A conversation change can keep the same content height, in which case
+    // FlatList does not emit onContentSizeChange for the new messages.
+    if (loading || !messages.length || !pendingInitialScrollRef.current) return undefined;
+    const frame = requestAnimationFrame(scrollToInitialMessages);
+    return () => cancelAnimationFrame(frame);
+  }, [loading, messages, scrollToInitialMessages]);
+
   const loadChannels = useCallback(async () => {
     const data = await apiRequest('/api/channels');
     const channels = data.channels || [];
     const general = channels.find((c) => c.name?.toLowerCase() === 'general') || channels[0];
+    if (__DEV__) console.log('[channel-api] selected channel', { count: channels.length, selectedId: general?.id || null });
     setChannel(general || null);
     return general;
   }, [apiRequest]);
@@ -258,7 +270,11 @@ export default function ChatScreen({ route, navigation }) {
           newMessages.length > prev.length ||
           (newLastId && newLastId !== prevLastId && newMessages.length >= prev.length);
 
-        setMessages(uniqueMessages(newMessages));
+        const visibleMessages = uniqueMessages(newMessages);
+        if (__DEV__ && mode === 'channel') {
+          console.log('[channel-api] updating message list', { received: newMessages.length, displayed: visibleMessages.length });
+        }
+        setMessages(visibleMessages);
 
         if (!didInitialScrollRef.current) {
           pendingInitialScrollRef.current = true;
@@ -455,9 +471,9 @@ export default function ChatScreen({ route, navigation }) {
               method: 'POST',
               body: JSON.stringify({
                 reported_user_id: senderId,
-                content_type: 'channel_message',
+                content_type: inDM ? 'dm_message' : 'channel_message',
                 content_id: message.id,
-                reason: 'Objectionable message in community chat',
+                reason: inDM ? 'Objectionable message in direct messages' : 'Objectionable message in community chat',
               }),
             });
             Alert.alert('Report sent', 'Thank you. Our team will review this within 24 hours.');
@@ -495,6 +511,7 @@ export default function ChatScreen({ route, navigation }) {
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      enabled={Platform.OS !== 'android' || inDM}
       keyboardVerticalOffset={keyboardVerticalOffset}
     >
       {renderHeader()}
@@ -528,7 +545,6 @@ export default function ChatScreen({ route, navigation }) {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         onContentSizeChange={handleContentSizeChange}
-        onScrollToIndexFailed={handleScrollToIndexFailed}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
       />
@@ -541,6 +557,13 @@ export default function ChatScreen({ route, navigation }) {
           placeholder="Type a message..."
           placeholderTextColor={colors.textSecondary}
           editable={canSend}
+          onFocus={() => {
+            if (!inDM) {
+              // Typing in the channel should bring the latest messages back into view.
+              isNearBottomRef.current = true;
+              setTimeout(() => scrollToBottom(true), 80);
+            }
+          }}
           multiline
         />
         <TouchableOpacity
