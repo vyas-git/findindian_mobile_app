@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,11 +19,10 @@ import TravelEventPage from '../pages/TravelEventPage';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import PostViewScreen from '../screens/PostViewScreen';
 import EmailAllMembersScreen from '../screens/EmailAllMembersScreen';
-import DeleteAccountScreen from '../screens/DeleteAccountScreen';
+import ProfileSettingsScreen from '../screens/ProfileSettingsScreen';
 import AppHeader from '../components/AppHeader';
 import SimpleScreenHeader from '../components/SimpleScreenHeader';
 import AppDrawer from '../components/AppDrawer';
-import ProfileModal from '../components/ProfileModal';
 import FlyersBackButton from '../components/FlyersBackButton';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import JobsScreen from '../screens/JobsScreen';
@@ -100,7 +99,6 @@ function MainTabsContent({ navigation }) {
   const { searchQuery, setSearchQuery, searchPlaceholder, header } = useAppShell();
   const { colors } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
 
   const { activeRoute, channelDmUserId } = useNavigationState((state) => {
     const stackRoute = state?.routes?.[state?.index];
@@ -163,7 +161,11 @@ function MainTabsContent({ navigation }) {
   }, [navigation]);
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.shellBg }]}>
+    <KeyboardAvoidingView
+      style={[styles.flex, { backgroundColor: colors.shellBg }]}
+      behavior={Platform.OS === 'android' ? 'height' : undefined}
+      enabled={Platform.OS === 'android' && activeRoute === 'Channel' && !hideChrome}
+    >
       {hideChrome ? null : activeRoute === 'Members' ? (
         <AppHeader
           user={user}
@@ -222,7 +224,7 @@ function MainTabsContent({ navigation }) {
         <Tab.Screen
           name="Channel"
           component={ChatScreen}
-          options={{ title: 'Channel' }}
+          options={{ title: 'Channel', tabBarHideOnKeyboard: Platform.OS === 'android' }}
           listeners={({ navigation: tabNav }) => ({
             tabPress: () => {
               tabNav.navigate('Channel', { dmUserId: undefined, dmUserName: undefined });
@@ -243,25 +245,12 @@ function MainTabsContent({ navigation }) {
         onNavigate={handleDrawerNavigate}
         onEditProfile={() => {
           setDrawerOpen(false);
-          setShowProfile(true);
-        }}
-        onEmailAll={() => {
-          setDrawerOpen(false);
-          navigation.navigate('EmailAllMembers');
+          navigation.navigate('ProfileSettings');
         }}
       />
 
-      <ProfileModal
-        visible={showProfile}
-        onClose={() => setShowProfile(false)}
-        onUpdated={refreshProfile}
-        onDeleteAccount={() => {
-          setShowProfile(false);
-          navigation.navigate('DeleteAccount');
-        }}
-      />
       <GermanyCityModal visible={Boolean(needsCity)} onSaved={() => refreshProfile()} />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -346,7 +335,7 @@ function AuthenticatedApp({ navigationRef }) {
         />
         <Stack.Screen name="PostView" component={PostViewScreen} options={{ title: 'Post' }} />
         <Stack.Screen name="EmailAllMembers" component={EmailAllMembersScreen} options={{ title: 'Email Members' }} />
-        <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: 'Delete Account' }} />
+        <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} options={{ title: 'Profile settings' }} />
       </Stack.Navigator>
     </NotificationProvider>
   );

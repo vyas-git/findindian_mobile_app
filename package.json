@@ -1,6 +1,6 @@
 {
   "name": "findindian-mobile",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "main": "index.js",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -46,6 +46,7 @@
     "start:lan": "npm run prepare-env && expo start --lan --clear",
     "start:tunnel": "npm run prepare-env && EXPO_UNSTABLE_TUNNEL_V2=1 expo start --tunnel --clear",
     "start:android": "npm run prepare-env && expo start --android --lan",
+    "start:qa": "node scripts/start-qa.js",
     "build:dev:android": "npx eas-cli build --profile development --platform android",
     "build:dev:android:ci": "npx eas-cli build --profile development --platform android --non-interactive",
     "build:dev:ios": "npx eas-cli build --profile development --platform ios --non-interactive",

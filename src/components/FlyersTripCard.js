@@ -84,7 +84,7 @@ export default function FlyersTripCard({
             </TouchableOpacity>
           ) : null}
 
-          {onDownload ? (
+          {isOwner && onDownload ? (
             <TouchableOpacity style={styles.secondaryBtn} onPress={onDownload} activeOpacity={0.85}>
               <Text style={styles.secondaryBtnText}>Download Flyer Card</Text>
             </TouchableOpacity>
