@@ -19,11 +19,10 @@ import TravelEventPage from '../pages/TravelEventPage';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import PostViewScreen from '../screens/PostViewScreen';
 import EmailAllMembersScreen from '../screens/EmailAllMembersScreen';
-import DeleteAccountScreen from '../screens/DeleteAccountScreen';
+import ProfileSettingsScreen from '../screens/ProfileSettingsScreen';
 import AppHeader from '../components/AppHeader';
 import SimpleScreenHeader from '../components/SimpleScreenHeader';
 import AppDrawer from '../components/AppDrawer';
-import ProfileModal from '../components/ProfileModal';
 import FlyersBackButton from '../components/FlyersBackButton';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import JobsScreen from '../screens/JobsScreen';
@@ -100,7 +99,6 @@ function MainTabsContent({ navigation }) {
   const { searchQuery, setSearchQuery, searchPlaceholder, header } = useAppShell();
   const { colors } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
 
   const { activeRoute, channelDmUserId } = useNavigationState((state) => {
     const stackRoute = state?.routes?.[state?.index];
@@ -247,23 +245,10 @@ function MainTabsContent({ navigation }) {
         onNavigate={handleDrawerNavigate}
         onEditProfile={() => {
           setDrawerOpen(false);
-          setShowProfile(true);
-        }}
-        onEmailAll={() => {
-          setDrawerOpen(false);
-          navigation.navigate('EmailAllMembers');
+          navigation.navigate('ProfileSettings');
         }}
       />
 
-      <ProfileModal
-        visible={showProfile}
-        onClose={() => setShowProfile(false)}
-        onUpdated={refreshProfile}
-        onDeleteAccount={() => {
-          setShowProfile(false);
-          navigation.navigate('DeleteAccount');
-        }}
-      />
       <GermanyCityModal visible={Boolean(needsCity)} onSaved={() => refreshProfile()} />
     </KeyboardAvoidingView>
   );
@@ -350,7 +335,7 @@ function AuthenticatedApp({ navigationRef }) {
         />
         <Stack.Screen name="PostView" component={PostViewScreen} options={{ title: 'Post' }} />
         <Stack.Screen name="EmailAllMembers" component={EmailAllMembersScreen} options={{ title: 'Email Members' }} />
-        <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: 'Delete Account' }} />
+        <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} options={{ title: 'Profile settings' }} />
       </Stack.Navigator>
     </NotificationProvider>
   );

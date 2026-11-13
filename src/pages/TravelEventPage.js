@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
   ScrollView,
   Share,
   Alert,
@@ -12,6 +11,7 @@ import { useApi } from '../hooks/useApi';
 import { useTheme } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthProvider';
 import FlyersTripCard from '../components/FlyersTripCard';
+import FlyerComments from '../components/FlyerComments';
 import FlyersCelebrateSheet from '../components/FlyersCelebrateSheet';
 import TravelShareCard from '../components/TravelShareCard';
 import { formatTravelDate } from '../utils/travelUtils';
@@ -31,34 +31,34 @@ export default function TravelEventPage({ route, navigation }) {
 
   const pageUrl = `https://findindian.de/flyers/${slug}`;
   const creator = event?.user || {};
-  const isOwner = Boolean(user?.id && creator.id && user.id === creator.id);
+  const isCurrentFlyer = Boolean(slug && event?.slug === slug);
+  const isOwner = Boolean(isCurrentFlyer && user?.id && user.id === creator.id);
   const showJoin = Boolean(creator.id && !isOwner);
 
-  const loadEvent = useCallback(async () => {
-    if (!slug) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiRequest(`/api/travel/${slug}`);
-      setEvent(data);
-    } catch (e) {
-      setError(e.message || 'Trip not found');
-    } finally {
+  useEffect(() => {
+    if (!slug) {
+      setEvent(null);
       setLoading(false);
+      return;
     }
+    const controller = new AbortController();
+    setLoading(true);
+    setEvent(null);
+    setError(null);
+    apiRequest(`/api/travel/${encodeURIComponent(slug)}`, { signal: controller.signal })
+      .then((data) => { if (!controller.signal.aborted) setEvent(data); })
+      .catch((e) => { if (!controller.signal.aborted) setError(e.message || 'Trip not found'); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [apiRequest, slug]);
 
-  useEffect(() => {
-    loadEvent();
-  }, [loadEvent]);
-
-  const handleJoin = () => {
-    if (!creator.id) return;
+  const openDM = (id, name) => {
+    if (!id || id === user?.id) return;
     navigation.navigate('Main', {
       screen: 'Channel',
       params: {
-        dmUserId: creator.id,
-        dmUserName: creator.name,
+        dmUserId: id,
+        dmUserName: name,
         returnTo: 'TravelList',
       },
     });
@@ -76,7 +76,7 @@ export default function TravelEventPage({ route, navigation }) {
   };
 
   const handleDownload = () => {
-    downloadRef.current?.download();
+    if (isOwner) downloadRef.current?.download();
   };
 
   const handleDelete = () => {
@@ -103,7 +103,7 @@ export default function TravelEventPage({ route, navigation }) {
 
   const onCelebrateClose = useCallback(() => setCelebrate(false), []);
 
-  if (loading) {
+  if (loading || (event && !isCurrentFlyer)) {
     return (
       <View style={styles.center}>
         <Text style={styles.loadingText}>Loading trip…</Text>
@@ -121,12 +121,12 @@ export default function TravelEventPage({ route, navigation }) {
 
   return (
     <>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <FlyersTripCard
           event={event}
           showJoin={showJoin}
           isOwner={isOwner}
-          onJoin={handleJoin}
+          onJoin={() => openDM(creator.id, creator.name)}
           onShare={handleShare}
           onDownload={isOwner ? handleDownload : undefined}
           onDelete={handleDelete}
@@ -134,7 +134,8 @@ export default function TravelEventPage({ route, navigation }) {
           pageUrl={pageUrl}
         />
 
-        <TravelShareCard ref={downloadRef} event={event} pageUrl={pageUrl} />
+        <FlyerComments key={`${event.slug}:${user?.id}`} slug={event.slug} userId={user?.id} onMessage={openDM} />
+        {isOwner && <TravelShareCard ref={downloadRef} event={event} pageUrl={pageUrl} />}
       </ScrollView>
 
       <FlyersCelebrateSheet

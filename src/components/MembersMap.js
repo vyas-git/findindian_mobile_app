@@ -7,7 +7,6 @@ import { getCityCoordinates, groupMembersByCity } from '../data/germanyCityCoord
 function buildMapHtml(isDark, accentColor) {
   const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const mapBg = '#e8eef2';
-  const textColor = isDark ? '#111' : '#111';
 
   return `<!DOCTYPE html>
 <html>
@@ -18,6 +17,7 @@ function buildMapHtml(isDark, accentColor) {
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; background: ${mapBg}; }
+    .map-chip { position:absolute; top:12px; left:12px; z-index:500; pointer-events:none; padding:6px 12px; border-radius:999px; font:700 12px Arial,sans-serif; background:${isDark ? '#141210' : '#fffaf4'}; color:${isDark ? '#f4efe8' : '#111'}; }
     .leaflet-custom-marker { background: transparent !important; border: none !important; }
     .leaflet-city-marker {
       display: inline-flex;
@@ -33,7 +33,7 @@ function buildMapHtml(isDark, accentColor) {
     .leaflet-city-name {
       font-size: 13px;
       font-weight: 700;
-      color: ${textColor};
+      color: #111;
       font-family: sans-serif;
       text-shadow: 0 0 3px rgba(255,255,255,0.9);
     }
@@ -47,6 +47,7 @@ function buildMapHtml(isDark, accentColor) {
 </head>
 <body>
   <div id="map"></div>
+  <div class="map-chip">Indians in Germany</div>
   <script>
     let map;
     let markerLayer = [];
@@ -70,7 +71,8 @@ function buildMapHtml(isDark, accentColor) {
     }
 
     function initMap() {
-      map = L.map('map', { zoomControl: true, attributionControl: true, zoomSnap: 0.5 }).setView([51.16, 10.45], 6);
+      map = L.map('map', { zoomControl: false, attributionControl: true, zoomSnap: 0.5 }).setView([51.16, 10.45], 6);
+      L.control.zoom({ position: 'topright' }).addTo(map);
       L.tileLayer('${tileUrl}', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors',

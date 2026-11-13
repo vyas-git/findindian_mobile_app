@@ -51,7 +51,6 @@ export default function AppDrawer({
   activeRoute,
   onNavigate,
   onEditProfile,
-  onEmailAll,
   memberCount,
 }) {
   const insets = useSafeAreaInsets();
@@ -61,9 +60,19 @@ export default function AppDrawer({
   const { apiRequest } = useApi();
   const [loadedCount, setLoadedCount] = useState(memberCount);
 
-  const openGuide = async (slug) => {
+  const [guideLinks, setGuideLinks] = useState(GUIDE_ARTICLES);
+  useEffect(() => {
+    if (!visible) return;
+    const controller = new AbortController();
+    apiRequest('/api/guide-links', { signal: controller.signal })
+      .then(({ links }) => { if (!controller.signal.aborted) setGuideLinks(links); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [apiRequest, visible]);
+
+  const openGuide = async (url) => {
     try {
-      await WebBrowser.openBrowserAsync(getGuideUrl(slug), {
+      await WebBrowser.openBrowserAsync(url, {
         toolbarColor: colors.headerBg,
         controlsColor: colors.primary,
         showTitle: true,
@@ -125,25 +134,12 @@ export default function AppDrawer({
                 <Text style={styles.profileName}>{name}</Text>
                 <View style={styles.profileLinks}>
                   <TouchableOpacity onPress={onEditProfile}>
-                    <Text style={styles.profileLink}>View Profile</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.profileDot}> · </Text>
-                  <TouchableOpacity onPress={onEditProfile}>
-                    <Text style={styles.profileLink}>Settings</Text>
+                    <Text style={styles.profileLink}>Profile settings</Text>
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.profileHeadline}>{headline}</Text>
               </View>
             </View>
-
-            <View style={styles.divider} />
-
-            <TouchableOpacity style={styles.premiumRow} onPress={() => { onEmailAll?.(); onClose?.(); }}>
-              <View style={styles.premiumIcon}>
-                <Ionicons name="mail" size={16} color="#fff" />
-              </View>
-              <Text style={styles.premiumText}>Email all members</Text>
-            </TouchableOpacity>
 
             <View style={styles.divider} />
 
@@ -204,13 +200,13 @@ export default function AppDrawer({
 
             <Text style={styles.sectionHeading}>QUICK LINKS</Text>
             <Text style={styles.sectionSubheading}>Settling in Germany — guides & official links</Text>
-            {GUIDE_ARTICLES.map((guide) => (
+            {guideLinks.map((guide) => (
               <SectionItem
                 key={guide.id}
-                icon={guide.icon}
+                icon={Ionicons.glyphMap[guide.icon] ? guide.icon : 'link-outline'}
                 label={guide.title}
                 onPress={() => {
-                  openGuide(guide.slug);
+                  openGuide(guide.url || getGuideUrl(guide.slug));
                   onClose?.();
                 }}
                 iconColor={colors.primary}
@@ -260,25 +256,8 @@ function createStyles(colors) {
     profileName: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
     profileLinks: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' },
     profileLink: { fontSize: 13, color: colors.primary, fontWeight: '600' },
-    profileDot: { color: colors.textSecondary, fontSize: 13 },
     profileHeadline: { fontSize: 12, color: colors.textSecondary, marginTop: 6, lineHeight: 16 },
     divider: { height: 1, backgroundColor: colors.divider, marginVertical: 10 },
-    premiumRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      gap: 12,
-    },
-    premiumIcon: {
-      width: 28,
-      height: 28,
-      borderRadius: 4,
-      backgroundColor: '#e7a33e',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    premiumText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     sectionHeading: {
       fontSize: 12,
       fontWeight: '700',
